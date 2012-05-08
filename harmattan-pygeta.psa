@@ -1,0 +1,11 @@
+[Project]
+category = Utility
+maintainer = Joshua King
+appname = GETA
+section = development
+pyversion = 2.6
+project = pygeta
+email = jking_ok@yahoo.com.au
+desc = Estimated time of arrival calculator
+template = harmattan
+

@@ -1,0 +1,118 @@
+#!/usr/bin/python2.6
+
+import sys
+
+from PySide import QtCore
+from PySide import QtGui
+from PySide import QtDeclarative
+import os
+
+# Comment the line below if you don't want to use OpenGL for QML rendering or if it is not supported
+from PySide import QtOpenGL
+
+import gconf
+
+import dbus
+import dbus.mainloop.glib
+
+from subprocess import call
+
+class Bridge(QtCore.QObject):
+	def __init__(self):
+		QtCore.QObject.__init__(self)
+		self._lat = self._long = 0.0
+		self._zoom = 8
+		self.latChanged.connect(self.saveLat)
+		self.longChanged.connect(self.saveLong)
+		self.zoomChanged.connect(self.saveZoom)
+
+	@QtCore.Slot()
+	def openSettings(self):
+		# = 'com..'
+		#path = '/'
+		#interface = 'com.nokia.DuiControlPanelIf'
+		##method = 'appletPage'
+		## Get the session bus
+		#bus = dbus.SessionBus()
+		#proxy = bus.get_object(service, path)
+		#connection = dbus.Interface(proxy, interface)
+		#connection.appletPage('GAuth')
+		call(['dbus-send','--session','--dest=com.nokia.DuiControlPanel','--print-reply','/','com.nokia.DuiControlPanelIf.appletPage',"string:GETA"])
+
+	@QtCore.Slot()
+	def readConfig(self):
+		prefix = '/apps/ControlPanel/PyGETA/'
+		self.lat = gconf.client_get_default().get_float(prefix+'Latitude')
+		self.long = gconf.client_get_default().get_float(prefix+'Longitude')
+		self.zoom = gconf.client_get_default().get_int(prefix+'Zoom')
+
+	def _get_lat(self):
+		return self._lat
+
+	def _set_lat(self, lat):
+		if (lat != self._lat):
+			self._lat = lat
+			self.latChanged.emit()
+
+	def _get_long(self):
+		return self._long
+
+	def _set_long(self, long):
+		if (long != self._long):
+			self._long = long
+			self.longChanged.emit()
+
+	def _get_zoom(self):
+		return self._zoom
+
+	def _set_zoom(self, zoom):
+		if (zoom != self._zoom):
+			self._zoom = zoom
+			self.zoomChanged.emit()
+
+	latChanged = QtCore.Signal()
+	longChanged = QtCore.Signal()
+	zoomChanged = QtCore.Signal()
+
+	@QtCore.Slot()
+	def saveLat(self):
+		gconf.client_get_default().set_float('/apps/ControlPanel/PyGETA/Latitude', self._lat)
+
+	@QtCore.Slot()
+	def saveLong(self):
+		gconf.client_get_default().set_float('/apps/ControlPanel/PyGETA/Longitude', self._long)
+
+	@QtCore.Slot()
+	def saveZoom(self):
+		gconf.client_get_default().set_int('/apps/ControlPanel/PyGETA/Zoom', self._zoom)
+
+	lat = QtCore.Property(float, _get_lat, _set_lat, notify=latChanged)
+	long = QtCore.Property(float, _get_long, _set_long, notify=longChanged)
+	zoom = QtCore.Property(int, _get_zoom, _set_zoom, notify=zoomChanged)
+
+def main():
+
+    # Enable glib main loop support
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+    app = QtGui.QApplication(sys.argv)
+    view = QtDeclarative.QDeclarativeView()
+
+    # Comment the two lines below if you don't want to use OpenGL for QML rendering or if it is not supported
+    glw = QtOpenGL.QGLWidget()
+    view.setViewport(glw)
+
+    b = Bridge()
+
+    view.rootContext().setContextProperty('bridge', b)
+
+    if os.path.exists('/opt/pygeta/qml'):
+        view.setSource('/opt//qml/main.qml')
+    else:
+        view.setSource(os.path.join('qml','main.qml'))
+
+    view.showFullScreen()
+    sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,166 @@
+import QtQuick 1.1
+import QtWebKit 1.0
+import QtMobility.location 1.2
+import com.nokia.meego 1.1
+
+import "secrets.js" as Secrets
+
+Page {
+    id: mainPage
+    tools: commonTools
+
+    property alias gpspos: gpspos
+    property alias web: web
+
+// OAuth2
+// Then look for code= in title
+
+ WebView {
+  // visible: false
+  id: oauth
+  anchors.fill: parent
+
+  javaScriptWindowObjects: QtObject {
+    WebView.windowObjectName: "host"
+
+//    function newCode(code) {
+//      console.log(code)
+//    }
+  }
+
+  onLoadFinished: {
+//   oauth.evaluateJavaScript(
+//"if (document.title.match(/code=/)) window.host.newCode(document.title.substr(\"code=\".length + document.title.search(/code=/))")
+   var pos = oauth.title.search(/code=/)
+   if (pos > -1) {
+    pos += "code=".length
+    var code = oauth.title.substr(pos)
+    console.log("code = "+code)
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function () {
+     if (req.readyState == XMLHttpRequest.DONE) {
+      if (req.status == 200) {
+       var a = JSON.parse(req.responseText);
+       console.log("access = "+a.access_token);
+       console.log("refresh = "+a.refresh_token);
+      }
+     }
+    };
+    req.open("POST", "https://accounts.google.com/o/oauth2/token", true)
+    req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
+    req.send("code="+code+"&client_id="+Secrets.clientID+"&client_secret="+Secrets.clientSecret+"&redirect_uri="+Secrets.redirectURI+"&grant_type=authorization_code")
+   }
+  }
+  url: "https://accounts.google.com/o/oauth2/auth?response_type=code&client_id="+Secrets.clientID+"&redirect_uri="+Secrets.redirectURI+"&scope=https://www.googleapis.com/auth/latitude.current.best"
+ }
+
+    PositionSource {
+        id: gpspos
+        onPositionChanged: {
+	    var lat = gpspos.position.coordinate.latitude
+            var lng = gpspos.position.coordinate.longitude
+            web.evaluateJavaScript(
+"window.map.panTo(new google.maps.LatLng("+lat+", "+lng+"));"
++"window.position.setPosition(new google.maps.LatLng("+lat+", "+lng+"));"
++"window.position.setMap(window.map);"
++"window.from.getPath().push(new google.maps.LatLng("+lat+","+lng+"));"
++"window.to.getPath().setAt(0, new google.maps.LatLng("+lat+", "+lng+"));"
+)
+        }
+    }
+
+    WebView {
+        visible: false
+        id: web
+        anchors.fill: parent
+
+        pressGrabTime: 0
+
+        onLoadFinished: {
+            web.evaluateJavaScript(
+"window.map.setZoom(" + bridge.zoom + ");"
++"window.map.panTo(new google.maps.LatLng(" + bridge.lat + "," + bridge.long + "));"
+)
+        }
+
+        javaScriptWindowObjects: QtObject {
+            WebView.windowObjectName: "host"
+
+	    property bool destinationSet: false
+
+            function clicked(lat, lng) {
+	        if (!destinationSet)
+                    web.evaluateJavaScript(
+"var lat = " + lat + ";"
++"var lng = " + lng + ";"
++"window.destination.setPosition(new google.maps.LatLng(lat, lng));"
+)
+	        destinationSet = true
+            }
+
+	    function destinationChanged() {
+		web.evaluateJavaScript(
+"if (window.to.getPath().getLength() == 0)"
++" window.to.getPath().push(window.destination.getPosition());"
++"window.to.getPath().setAt(1, window.destination.getPosition());"
+)
+}
+
+            function newBounds(lat, lng, zoom) {
+                bridge.lat = lat
+                bridge.long = lng
+                bridge.zoom = zoom
+            }
+        }
+
+        html: "<!DOCTYPE html>
+<html>
+  <head>
+    <meta name=\"viewport\" content=\"initial-scale=1.0, user-scalable=no\" />
+    <style type=\"text/css\">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map_canvas { height: 100% }
+    </style>
+    <script type=\"text/javascript\"
+      src=\"http://maps.googleapis.com/maps/api/js?key=AIzaSyCThoBLE87YgWfAs-EFmkKSTBpmJXJ4PYc&sensor=true\">
+    </script>
+    <script type=\"text/javascript\">
+      function initialize() {
+        var myOptions = {
+          center: new google.maps.LatLng(-34.397, 150.644),
+          zoom: 8,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        window.map = new google.maps.Map(document.getElementById(\"map_canvas\"),
+            myOptions);
+        window.from = new google.maps.Polyline({ path: [], strokeColor: \"#00FF00\" });
+	window.to = new google.maps.Polyline({ path: [], strokeColor: \"#FF0000\" });
+	window.from.setMap(window.map)
+        window.to.setMap(window.map)
+        window.traffic = new google.maps.TrafficLayer();
+        window.position = new google.maps.Marker({})
+        window.destination = new google.maps.Marker({ draggable: true })
+	window.destination.setMap(window.map);
+        google.maps.event.addListener(window.map, \"click\", function (event) {
+          window.host.clicked(event.latLng.lat(), event.latLng.lng());
+        });
+	google.maps.event.addListener(window.destination, \"position_changed\", function () {
+	  window.host.destinationChanged();
+	});
+        google.maps.event.addListener(window.map, \"bounds_changed\", function () {
+          window.host.newBounds(
+            window.map.getCenter().lat(),
+            window.map.getCenter().lng(),
+            window.map.getZoom()
+          );
+        });
+      }
+    </script>
+  </head>
+  <body onload=\"initialize()\">
+    <div id=\"map_canvas\" style=\"width:100%; height:100%\"></div>
+  </body>
+</html>"
+    }
+}
