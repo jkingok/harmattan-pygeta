@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Terminal=false
+Name=GETA
+Exec=invoker --single-instance --type=e /opt/pygeta/bin/pygeta
+Icon=/usr/share/icons/hicolor/80x80/apps/pygeta80.png
+Categories=Utility;

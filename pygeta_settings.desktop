@@ -1,0 +1,19 @@
+[Desktop Entry]
+Type=ControlPanelApplet
+Name=GAuth
+X-logical-id=decl_exampl_1
+X-translation-catalog=duisettings
+Icon=
+
+X-Maemo-Service=com.nokia.DuiControlPanel
+X-Maemo-Method=com.nokia.DuiControlPanelIf.appletPage
+X-Maemo-Object-Path=/
+X-Maemo-Fixed-Args=GETA
+
+[DUI]
+X-DUIApplet-Applet=libdeclarative.so
+
+[DCP]
+Category=Applications
+Order=10
+Part=pygeta_settings.xml
