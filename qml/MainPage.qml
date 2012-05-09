@@ -12,37 +12,41 @@ Page {
     property alias gpspos: gpspos
     property alias web: web
 
+    property string accessToken: ""
+    property int expiry: 0
+    property bool oauthing: false
+
 // OAuth2
 // Then look for code= in title
 
  WebView {
-  // visible: false
+  visible: false
   id: oauth
   anchors.fill: parent
 
   javaScriptWindowObjects: QtObject {
+
     WebView.windowObjectName: "host"
 
-//    function newCode(code) {
-//      console.log(code)
-//    }
   }
 
   onLoadFinished: {
-//   oauth.evaluateJavaScript(
-//"if (document.title.match(/code=/)) window.host.newCode(document.title.substr(\"code=\".length + document.title.search(/code=/))")
    var pos = oauth.title.search(/code=/)
    if (pos > -1) {
+    oauth.visible = false
+    web.visible = true
     pos += "code=".length
     var code = oauth.title.substr(pos)
-    console.log("code = "+code)
     var req = new XMLHttpRequest();
     req.onreadystatechange = function () {
      if (req.readyState == XMLHttpRequest.DONE) {
       if (req.status == 200) {
        var a = JSON.parse(req.responseText);
-       console.log("access = "+a.access_token);
-       console.log("refresh = "+a.refresh_token);
+       bridge.token = a.refresh_token;
+       accessToken = a.access_token;
+       var d = new Date();
+       expiry = d.getTime() / 1000 + a.expires_in
+       console.log("Got refresh = " + bridge.token + ", access = " + accessToken + ", expiry = " + expiry)
       }
      }
     };
@@ -59,6 +63,8 @@ Page {
         onPositionChanged: {
 	    var lat = gpspos.position.coordinate.latitude
             var lng = gpspos.position.coordinate.longitude
+            var alt = gpspos.position.coordinate.altitude;
+            var acc = (gpspos.position.horizontalAccuracy + gpspos.position.verticalAccuracy) / 2;
             web.evaluateJavaScript(
 "window.map.panTo(new google.maps.LatLng("+lat+", "+lng+"));"
 +"window.position.setPosition(new google.maps.LatLng("+lat+", "+lng+"));"
@@ -66,11 +72,54 @@ Page {
 +"window.from.getPath().push(new google.maps.LatLng("+lat+","+lng+"));"
 +"window.to.getPath().setAt(0, new google.maps.LatLng("+lat+", "+lng+"));"
 )
+            console.log("New GPS position")
+            if (oauthing) return;
+            var d = new Date();
+            if (d.getTime() / 1000 < expiry) {
+                var req = new XMLHttpRequest();
+                req.onreadystatechange = function () {
+                    if (req.readyState == XMLHttpRequest.DONE) {
+                        if (req.status == 200) {
+                            var a = JSON.parse(req.responseText);
+			    console.log("Latitude updated")
+                        } else {
+                            expiry = 0
+                        }
+                        oauthing = false
+                    }
+                };
+                oauthing = true
+                req.open("POST", "https://www.googleapis.com/latitude/v1/currentLocation?key="+Secrets.apiKey, true)
+                req.setRequestHeader("Authorization", "Bearer "+accessToken)
+                req.setRequestHeader("Content-Type", "application/json")
+                req.send("{ \"data\": { \"kind\":\"latitude#location\", \"latitude\":"+lat+", \"longitude\":"+lng+", \"accuracy\":"+acc+", \"altitude\":"+alt+" } }");
+            } else if (bridge.token != "") {
+                var req = new XMLHttpRequest();
+                req.onreadystatechange = function () {
+                    if (req.readyState == XMLHttpRequest.DONE) {
+                        if (req.status == 200) {
+                            var a = JSON.parse(req.responseText);
+                            accessToken = a.access_token;
+                            var d = new Date();
+                            expiry = d.getTime() / 1000 + a.expires_in
+                            console.log("Got access = " + accessToken + ", expiry = " + expiry)
+                        }
+                        oauthing = false
+                     }
+                 };
+                 oauthing = true
+                 req.open("POST", "https://accounts.google.com/o/oauth2/token", true)
+                 req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
+                 req.send("refresh_token="+bridge.token+"&client_id="+Secrets.clientID+"&client_secret="+Secrets.clientSecret+"&grant_type=refresh_token")
+            } else {
+                web.visible = false
+                oauth.visible = true
+            }
         }
     }
 
     WebView {
-        visible: false
+        //visible: false
         id: web
         anchors.fill: parent
 

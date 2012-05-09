@@ -22,9 +22,11 @@ class Bridge(QtCore.QObject):
 		QtCore.QObject.__init__(self)
 		self._lat = self._long = 0.0
 		self._zoom = 8
+		self._token = ''
 		self.latChanged.connect(self.saveLat)
 		self.longChanged.connect(self.saveLong)
 		self.zoomChanged.connect(self.saveZoom)
+		self.tokenChanged.connect(self.saveToken)
 
 	@QtCore.Slot()
 	def openSettings(self):
@@ -45,6 +47,7 @@ class Bridge(QtCore.QObject):
 		self.lat = gconf.client_get_default().get_float(prefix+'Latitude')
 		self.long = gconf.client_get_default().get_float(prefix+'Longitude')
 		self.zoom = gconf.client_get_default().get_int(prefix+'Zoom')
+		self.token = gconf.client_get_default().get_string(prefix+'Token') or str()
 
 	def _get_lat(self):
 		return self._lat
@@ -70,9 +73,18 @@ class Bridge(QtCore.QObject):
 			self._zoom = zoom
 			self.zoomChanged.emit()
 
+	def _get_token(self):
+		return self._token
+
+	def _set_token(self, token):
+		if (token != self._token):
+			self._token = token
+			self.tokenChanged.emit()
+
 	latChanged = QtCore.Signal()
 	longChanged = QtCore.Signal()
 	zoomChanged = QtCore.Signal()
+	tokenChanged = QtCore.Signal()
 
 	@QtCore.Slot()
 	def saveLat(self):
@@ -86,9 +98,14 @@ class Bridge(QtCore.QObject):
 	def saveZoom(self):
 		gconf.client_get_default().set_int('/apps/ControlPanel/PyGETA/Zoom', self._zoom)
 
+	@QtCore.Slot()
+	def saveToken(self):
+		gconf.client_get_default().set_string('/apps/ControlPanel/PyGETA/Token', self._token)
+
 	lat = QtCore.Property(float, _get_lat, _set_lat, notify=latChanged)
 	long = QtCore.Property(float, _get_long, _set_long, notify=longChanged)
 	zoom = QtCore.Property(int, _get_zoom, _set_zoom, notify=zoomChanged)
+	token = QtCore.Property(str, _get_token, _set_token, notify=tokenChanged)
 
 def main():
 
