@@ -17,5 +17,6 @@ setup(name="pygeta",
                   ('/usr/share/icons/hicolor/64x64/apps', ['pygeta.png']),
                   ('/usr/share/icons/hicolor/80x80/apps', ['pygeta80.png']),
                   ('/opt/pygeta/qml', glob.glob('qml/*.qml')),
+                  ('/opt/pygeta/qml', glob.glob('qml/*.js')),
                   ('/usr/share/duicontrolpanel/desktops',['pygeta_settings.desktop']),
                   ('/usr/share/duicontrolpanel/uidescriptions',['pygeta_settings.xml']) ],)
