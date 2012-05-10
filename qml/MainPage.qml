@@ -15,6 +15,7 @@ Page {
     property string accessToken: ""
     property int expiry: 0
     property bool oauthing: false
+    property int latituded: 0
 
 // OAuth2
 // Then look for code= in title
@@ -53,7 +54,7 @@ Page {
     req.open("POST", "https://accounts.google.com/o/oauth2/token", true)
     req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
     req.send("code="+code+"&client_id="+Secrets.clientID+"&client_secret="+Secrets.clientSecret+"&redirect_uri="+Secrets.redirectURI+"&grant_type=authorization_code")
-   }
+r   }
   }
   url: "https://accounts.google.com/o/oauth2/auth?response_type=code&client_id="+Secrets.clientID+"&redirect_uri="+Secrets.redirectURI+"&scope=https://www.googleapis.com/auth/latitude.current.best"
  }
@@ -77,6 +78,7 @@ Page {
             console.log("New GPS position")
             if (oauthing) return;
             var d = new Date();
+            if (d.getTime() / 1000 < latituded) return;
             if (d.getTime() / 1000 < expiry) {
                 var req = new XMLHttpRequest();
                 req.onreadystatechange = function () {
@@ -88,6 +90,10 @@ Page {
                             expiry = 0
                         }
                         oauthing = false
+                        latituded = d.getTime() / 1000 + 15;
+                        web.evaluateJavaScript(
+"window.uploaded.setPosition(new google.maps.LatLng("+lat+", "+lng+"));"
+);
                     }
                 };
                 oauthing = true
@@ -194,6 +200,8 @@ Page {
         window.position = new google.maps.Marker({})
         window.destination = new google.maps.Marker({ draggable: true })
 	window.destination.setMap(window.map);
+        window.uploaded = new google.maps.Marker({ })
+	window.uploaded.setMap(window.map);
         google.maps.event.addListener(window.map, \"click\", function (event) {
           window.host.clicked(event.latLng.lat(), event.latLng.lng());
         });
