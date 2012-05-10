@@ -124,7 +124,7 @@ def main():
     view.rootContext().setContextProperty('bridge', b)
 
     if os.path.exists('/opt/pygeta/qml'):
-        view.setSource('/opt//qml/main.qml')
+        view.setSource('/opt/pygeta/qml/main.qml')
     else:
         view.setSource(os.path.join('qml','main.qml'))
 
