@@ -1,5 +1,6 @@
 <aegis>
   <request>
      <credential name="Location" />
+     <for path="/opt/pygeta/bin/pygeta" id="client" />
   </request>
 </aegis>
