@@ -16,6 +16,6 @@ setup(name="pygeta",
       data_files=[('/usr/share/applications',['pygeta_harmattan.desktop']),
                   ('/usr/share/icons/hicolor/64x64/apps', ['pygeta.png']),
                   ('/usr/share/icons/hicolor/80x80/apps', ['pygeta80.png']),
-                  ('/opt/pygauth/qml', glob.glob('qml/*.qml')),
+                  ('/opt/pygeta/qml', glob.glob('qml/*.qml')),
                   ('/usr/share/duicontrolpanel/desktops',['pygeta_settings.desktop']),
                   ('/usr/share/duicontrolpanel/uidescriptions',['pygeta_settings.xml']) ],)
