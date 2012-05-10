@@ -71,6 +71,8 @@ Page {
 +"window.position.setMap(window.map);"
 +"window.from.getPath().push(new google.maps.LatLng("+lat+","+lng+"));"
 +"window.to.getPath().setAt(0, new google.maps.LatLng("+lat+", "+lng+"));"
++"window.accuracy.setCenter(new google.maps.LatLng("+lat+", "+lng+"));"
++"window.accuracy.setRadius("+acc+");"
 )
             console.log("New GPS position")
             if (oauthing) return;
@@ -188,6 +190,7 @@ Page {
 	window.from.setMap(window.map)
         window.to.setMap(window.map)
         window.traffic = new google.maps.TrafficLayer();
+        window.accuracy = new google.maps.Circle({ fillColor: \"#66FF66\", fillOpacity: 0.5, map: window.map })
         window.position = new google.maps.Marker({})
         window.destination = new google.maps.Marker({ draggable: true })
 	window.destination.setMap(window.map);
