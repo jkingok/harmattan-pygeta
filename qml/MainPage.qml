@@ -61,6 +61,9 @@ r   }
 
     PositionSource {
         id: gpspos
+
+	property Coordinate lastLatitude: null;
+
         onPositionChanged: {
 	    var lat = gpspos.position.coordinate.latitude
             var lng = gpspos.position.coordinate.longitude
@@ -78,8 +81,21 @@ r   }
             console.log("New GPS position")
             if (oauthing) return;
             var d = new Date();
-            if (d.getTime() / 1000 < latituded) return;
+            if (d.getTime() / 1000 < latituded) {
+                console.log("Last latitude too recent");
+                return;
+            }
+            var m;
+            if (lastLatitude != null && (m = lastLatitude.distanceTo(gpspos.position.coordinate)) < 100) {
+                console.log("Last latitude too close: "+m)
+                return;
+            }
+            if (acc > 100) {
+                console.log("Not accurate enough")
+                return;
+            }
             if (d.getTime() / 1000 < expiry) {
+                lastLatitude = gpspos.position.coordinate;
                 var req = new XMLHttpRequest();
                 req.onreadystatechange = function () {
                     if (req.readyState == XMLHttpRequest.DONE) {
@@ -91,6 +107,9 @@ r   }
                         }
                         oauthing = false
                         latituded = d.getTime() / 1000 + 15;
+                        //var oldLatitude = lastLatitude;
+                        lastLatitude = Qt.createQmlObject('import QtMobility.location 1.2; Coordinate { latitude:'+ lat +'; longitude: '+ lng +'; }', gpspos);
+                        //if (oldLatitude != null) oldLatitude.destroy();
                         web.evaluateJavaScript(
 "window.uploaded.setPosition(new google.maps.LatLng("+lat+", "+lng+"));"
 );
