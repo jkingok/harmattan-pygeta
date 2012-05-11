@@ -1,3 +1,6 @@
 #!/bin/sh
-/usr/bin/aegis-exec -s -u user /usr/bin/gconftool --recursive-unset /apps/ControlPanel/PyGETA
-exit 0
+if [ "x$1" != "xupgrade" ]; then
+    exec /usr/bin/aegis-exec -s -u user /usr/bin/gconftool --recursive-unset /apps/ControlPanel/PyGETA
+else
+    exit 0
+fi
