@@ -48,13 +48,14 @@ Page {
        var d = new Date();
        expiry = d.getTime() / 1000 + a.expires_in
        console.log("Got refresh = " + bridge.token + ", access = " + accessToken + ", expiry = " + expiry)
+       oauthing = false
       }
      }
     };
     req.open("POST", "https://accounts.google.com/o/oauth2/token", true)
     req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
     req.send("code="+code+"&client_id="+Secrets.clientID+"&client_secret="+Secrets.clientSecret+"&redirect_uri="+Secrets.redirectURI+"&grant_type=authorization_code")
-r   }
+   }
   }
   url: "https://accounts.google.com/o/oauth2/auth?response_type=code&client_id="+Secrets.clientID+"&redirect_uri="+Secrets.redirectURI+"&scope=https://www.googleapis.com/auth/latitude.current.best"
  }
@@ -139,6 +140,7 @@ r   }
                  req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
                  req.send("refresh_token="+bridge.token+"&client_id="+Secrets.clientID+"&client_secret="+Secrets.clientSecret+"&grant_type=refresh_token")
             } else {
+                oauthing = true
                 web.visible = false
                 oauth.visible = true
             }
