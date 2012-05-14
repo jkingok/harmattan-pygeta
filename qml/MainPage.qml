@@ -226,7 +226,7 @@ Page {
         window.position = new google.maps.Marker({})
         window.destination = new google.maps.Marker({ draggable: true })
 	window.destination.setMap(window.map);
-        window.uploaded = new google.maps.Marker({ })
+        window.uploaded = new google.maps.Marker({ icon: \"http://www.google.com/latitude/apps/static/favicon.ico\" })
 	window.uploaded.setMap(window.map);
         google.maps.event.addListener(window.map, \"click\", function (event) {
           window.host.clicked(event.latLng.lat(), event.latLng.lng());
