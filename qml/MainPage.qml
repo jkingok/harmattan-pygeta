@@ -87,11 +87,11 @@ Page {
                 return;
             }
             var m;
-            if (lastLatitude != null && (m = lastLatitude.distanceTo(gpspos.position.coordinate)) < 100) {
+            if (lastLatitude != null && (m = lastLatitude.distanceTo(gpspos.position.coordinate)) < bridge.minDistance) {
                 console.log("Last latitude too close: "+m)
                 return;
             }
-            if (acc > 100) {
+            if (acc > bridge.minAccuracy) {
                 console.log("Not accurate enough")
                 return;
             }
@@ -107,7 +107,7 @@ Page {
                             expiry = 0
                         }
                         oauthing = false
-                        latituded = d.getTime() / 1000 + 15;
+                        latituded = d.getTime() / 1000 + bridge.minTime;
                         //var oldLatitude = lastLatitude;
                         lastLatitude = Qt.createQmlObject('import QtMobility.location 1.2; Coordinate { latitude:'+ lat +'; longitude: '+ lng +'; }', gpspos);
                         //if (oldLatitude != null) oldLatitude.destroy();

@@ -1,5 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <settings>
-	<group title="General">
+	<group title="Latitude">
+		<boolean key="/apps/ControlPanel/PyGETA/Latitude/Enabled" title="Send position to Google"></boolean>
+		<integer key="/apps/ControlPanel/PyGETA/Latitude/MinTime"
+			title="Minimum time (seconds) between updates" min="0" max="3600"></integer>
+		<integer key="/apps/ControlPanel/PyGETA/Latitude/MinDistance"
+			title="Minimum distance (metres) between updates" min="0" max="10000"></integer>
+		<integer key="/apps/ControlPanel/PyGETA/Latitude/MinDistance"
+			title="Minimum distance (metres) between updates" min="0" max="10000"></integer>
 	</group>
 </settings>

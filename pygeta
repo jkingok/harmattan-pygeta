@@ -23,10 +23,16 @@ class Bridge(QtCore.QObject):
 		self._lat = self._long = 0.0
 		self._zoom = 8
 		self._token = ''
+		self._minDistance = 100
+		self._minTime = 15
+		self._minAccuracy = 100
 		self.latChanged.connect(self.saveLat)
 		self.longChanged.connect(self.saveLong)
 		self.zoomChanged.connect(self.saveZoom)
 		self.tokenChanged.connect(self.saveToken)
+		self.minDistanceChanged.connect(self.saveMinDistance)
+		self.minTimeChanged.connect(self.saveMinTime)
+		self.minAccuracyChanged.connect(self.saveMinAccuracy)
 
 	@QtCore.Slot()
 	def openSettings(self):
@@ -44,10 +50,13 @@ class Bridge(QtCore.QObject):
 	@QtCore.Slot()
 	def readConfig(self):
 		prefix = '/apps/ControlPanel/PyGETA/'
-		self.lat = gconf.client_get_default().get_float(prefix+'Latitude')
-		self.long = gconf.client_get_default().get_float(prefix+'Longitude')
-		self.zoom = gconf.client_get_default().get_int(prefix+'Zoom')
-		self.token = gconf.client_get_default().get_string(prefix+'Token') or str()
+		self.lat = gconf.client_get_default().get_float(prefix+'View/Latitude') or 0
+		self.long = gconf.client_get_default().get_float(prefix+'View/Longitude') or 0
+		self.zoom = gconf.client_get_default().get_int(prefix+'View/Zoom') or 8
+		self.token = gconf.client_get_default().get_int(prefix+'Latitude/Token') or str()
+		self.minDistance = gconf.client_get_default().get_int(prefix+'Latitude/MinDistance') or 100
+		self.minTime = gconf.client_get_default().get_int(prefix+'Latitude/MinTime') or 15
+		self.minAccuracy = gconf.client_get_default().get_int(prefix+'Latitude/MinAccuracy') or 100
 
 	def _get_lat(self):
 		return self._lat
@@ -81,10 +90,37 @@ class Bridge(QtCore.QObject):
 			self._token = token
 			self.tokenChanged.emit()
 
+	def _get_minDistance(self):
+		return self._minDistance
+
+	def _set_minDistance(self, value):
+		if (value != self._minDistance):
+			self._minDistance = value
+			self.minDistanceChanged.emit()
+
+	def _get_minTime(self):
+		return self._minTime
+
+	def _set_minTime(self, value):
+		if (value != self._minTime):
+			self._minTime = value
+			self.minTimeChanged.emit()
+
+	def _get_minAccuracy(self):
+		return self._minAccuracy
+
+	def _set_minAccuracy(self, value):
+		if (value != self._minAccuracy):
+			self._minAccuracy = value
+			self.minAccuracyChanged.emit()
+
 	latChanged = QtCore.Signal()
 	longChanged = QtCore.Signal()
 	zoomChanged = QtCore.Signal()
 	tokenChanged = QtCore.Signal()
+	minDistanceChanged = QtCore.Signal()
+	minTimeChanged = QtCore.Signal()
+	minAccuracyChanged = QtCore.Signal()
 
 	@QtCore.Slot()
 	def saveLat(self):
@@ -100,12 +136,27 @@ class Bridge(QtCore.QObject):
 
 	@QtCore.Slot()
 	def saveToken(self):
-		gconf.client_get_default().set_string('/apps/ControlPanel/PyGETA/Token', self._token)
+		gconf.client_get_default().set_string('/apps/ControlPanel/PyGETA/Latitude/Token', self._token)
+
+	@QtCore.Slot()
+	def saveMinDistance(self):
+		gconf.client_get_default().set_int('/apps/ControlPanel/PyGETA/Latitude/MinDistance', self._minDistance)
+
+	@QtCore.Slot()
+	def saveMinTime(self):
+		gconf.client_get_default().set_int('/apps/ControlPanel/PyGETA/Latitude/MonTime', self._minTime)
+
+	@QtCore.Slot()
+	def saveMinAccuracy(self):
+		gconf.client_get_default().set_string('/apps/ControlPanel/PyGETA/Latitude/MinAccuracy', self._minAccuracy)
 
 	lat = QtCore.Property(float, _get_lat, _set_lat, notify=latChanged)
 	long = QtCore.Property(float, _get_long, _set_long, notify=longChanged)
 	zoom = QtCore.Property(int, _get_zoom, _set_zoom, notify=zoomChanged)
 	token = QtCore.Property(str, _get_token, _set_token, notify=tokenChanged)
+	minDistance = QtCore.Property(int, _get_minDistance, _set_minDistance, notify=minDistanceChanged)
+	minTime = QtCore.Property(int, _get_minTime, _set_minTime, notify=minTimeChanged)
+	minAccuracy = QtCore.Property(int, _get_minAccuracy, _set_minAccuracy, notify=minAccuracyChanged)
 
 def main():
 
