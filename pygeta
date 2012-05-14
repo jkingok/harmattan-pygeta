@@ -69,9 +69,9 @@ class Bridge(QtCore.QObject):
 	def _get_long(self):
 		return self._long
 
-	def _set_long(self, long):
-		if (long != self._long):
-			self._long = long
+	def _set_long(self, lng):
+		if (lng != self._long):
+			self._long = lng
 			self.longChanged.emit()
 
 	def _get_zoom(self):
@@ -124,7 +124,7 @@ class Bridge(QtCore.QObject):
 
 	@QtCore.Slot()
 	def saveLat(self):
-		gconf.client_get_default().set_float('/apps/ControlPanel/PyGETA/Viee/Latitude', self._lat)
+		gconf.client_get_default().set_float('/apps/ControlPanel/PyGETA/View/Latitude', self._lat)
 
 	@QtCore.Slot()
 	def saveLong(self):
