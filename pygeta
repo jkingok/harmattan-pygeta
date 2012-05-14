@@ -53,7 +53,7 @@ class Bridge(QtCore.QObject):
 		self.lat = gconf.client_get_default().get_float(prefix+'View/Latitude') or 0
 		self.long = gconf.client_get_default().get_float(prefix+'View/Longitude') or 0
 		self.zoom = gconf.client_get_default().get_int(prefix+'View/Zoom') or 8
-		self.token = gconf.client_get_default().get_int(prefix+'Latitude/Token') or str()
+		self.token = gconf.client_get_default().get_string(prefix+'Latitude/Token') or str()
 		self.minDistance = gconf.client_get_default().get_int(prefix+'Latitude/MinDistance') or 100
 		self.minTime = gconf.client_get_default().get_int(prefix+'Latitude/MinTime') or 15
 		self.minAccuracy = gconf.client_get_default().get_int(prefix+'Latitude/MinAccuracy') or 100
@@ -124,15 +124,15 @@ class Bridge(QtCore.QObject):
 
 	@QtCore.Slot()
 	def saveLat(self):
-		gconf.client_get_default().set_float('/apps/ControlPanel/PyGETA/Latitude', self._lat)
+		gconf.client_get_default().set_float('/apps/ControlPanel/PyGETA/Viee/Latitude', self._lat)
 
 	@QtCore.Slot()
 	def saveLong(self):
-		gconf.client_get_default().set_float('/apps/ControlPanel/PyGETA/Longitude', self._long)
+		gconf.client_get_default().set_float('/apps/ControlPanel/PyGETA/View/Longitude', self._long)
 
 	@QtCore.Slot()
 	def saveZoom(self):
-		gconf.client_get_default().set_int('/apps/ControlPanel/PyGETA/Zoom', self._zoom)
+		gconf.client_get_default().set_int('/apps/ControlPanel/PyGETA/View/Zoom', self._zoom)
 
 	@QtCore.Slot()
 	def saveToken(self):
