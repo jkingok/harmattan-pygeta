@@ -78,6 +78,7 @@ Page {
 +"window.to.getPath().setAt(0, new google.maps.LatLng("+lat+", "+lng+"));"
 +"window.accuracy.setCenter(new google.maps.LatLng("+lat+", "+lng+"));"
 +"window.accuracy.setRadius("+acc+");"
++"window.accuracy.setOptions({ strokeColor: \"#" + (acc > bridge.minAccuracy ? "FF0000" : "00FF00") + "\" });"
 )
             console.log("New GPS position")
             if (oauthing) return;
@@ -96,7 +97,6 @@ Page {
                 return;
             }
             if (d.getTime() / 1000 < expiry) {
-                lastLatitude = gpspos.position.coordinate;
                 var req = new XMLHttpRequest();
                 req.onreadystatechange = function () {
                     if (req.readyState == XMLHttpRequest.DONE) {
@@ -162,9 +162,11 @@ Page {
         }
 
         javaScriptWindowObjects: QtObject {
+	    id: webHost
             WebView.windowObjectName: "host"
 
 	    property bool destinationSet: false
+            property Coordinate destination: null;
 
             function clicked(lat, lng) {
 	        if (!destinationSet)
@@ -174,15 +176,18 @@ Page {
 +"window.destination.setPosition(new google.maps.LatLng(lat, lng));"
 )
 	        destinationSet = true
+                destination = Qt.createQmlObject('import QtMobility.location 1.2; Coordinate { latitude:'+ lat +'; longitude: '+ lng +'; }', webHost);
             }
 
-	    function destinationChanged() {
+	    function destinationChanged(lat, lng) {
 		web.evaluateJavaScript(
 "if (window.to.getPath().getLength() == 0)"
 +" window.to.getPath().push(window.destination.getPosition());"
 +"window.to.getPath().setAt(1, window.destination.getPosition());"
 )
-}
+		destination.latitude = lat
+                destination.longitude = lng
+            }
 
             function newBounds(lat, lng, zoom) {
                 bridge.lat = lat
@@ -227,7 +232,7 @@ Page {
           window.host.clicked(event.latLng.lat(), event.latLng.lng());
         });
 	google.maps.event.addListener(window.destination, \"position_changed\", function () {
-	  window.host.destinationChanged();
+	  window.host.destinationChanged(window.destination.getPosition().lat(), window.destination.getPosition().lng());
 	});
         google.maps.event.addListener(window.map, \"bounds_changed\", function () {
           window.host.newBounds(
@@ -243,5 +248,14 @@ Page {
     <div id=\"map_canvas\" style=\"width:100%; height:100%\"></div>
   </body>
 </html>"
+    }
+
+    ProgressBar {
+	id: progressBar
+	anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        value: web.progress
+	visible: value < 1.0
     }
 }
