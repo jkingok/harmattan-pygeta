@@ -44,7 +44,7 @@ Page {
             if (!bridge.enabled) return;
             var d = new Date();
             var m = lastLatitude == null ? 0 : lastLatitude.distanceTo(gpspos.position.coordinate);
-            status.text = 'Latitude updated ' + Math.round(d.getTime() / 1000 - latituded) + 's and ' + Math.round(m) +'m ago.'
+            status.text = (latituded > 0) ? 'Latitude updated ' + Math.round(d.getTime() / 1000 - latituded) + 's and ' + Math.round(m) +'m ago.' : 'Latitude not yet updated.'
             if (destinationSet) {
                 destStatus.text = Math.round(gpspos.position.coordinate.distanceTo(destination)) + 'm from ' + destinationName + '.';
 	    }
