@@ -43,6 +43,9 @@ Page {
 +"window.accuracy.setOptions({ strokeColor: \"#" + (acc > bridge.minAccuracy ? "FF0000" : "00FF00") + "\" });"
 )
             console.log("New GPS position")
+            if (destinationSet) {
+                destStatus.text = Math.round(gpspos.position.coordinate.distanceTo(destination)) + 'm from ' + destinationName + '.';
+	    }
             if (!bridge.enabled || (warned && !granted)) return;
             if (latituded == 0 && !warned) {
                 warned = true;
@@ -52,9 +55,6 @@ Page {
             var d = new Date();
             var m = lastLatitude == null ? 0 : lastLatitude.distanceTo(gpspos.position.coordinate);
             status.text = (latituded > 0) ? 'Latitude updated ' + Math.round(d.getTime() / 1000 - latituded) + 's and ' + Math.round(m) +'m ago.' : 'Latitude not yet updated.'
-            if (destinationSet) {
-                destStatus.text = Math.round(gpspos.position.coordinate.distanceTo(destination)) + 'm from ' + destinationName + '.';
-	    }
             if (oauthing) return;
             if (d.getTime() / 1000 < latituded + bridge.minTime) {
                 console.log("Last latitude too recent");
