@@ -16,49 +16,9 @@ Page {
     property int expiry: 0
     property bool oauthing: false
     property int latituded: 0
-
-// OAuth2
-// Then look for code= in title
-
- WebView {
-  visible: false
-  id: oauth
-  anchors.fill: parent
-
-  javaScriptWindowObjects: QtObject {
-
-    WebView.windowObjectName: "host"
-
-  }
-
-  onLoadFinished: {
-   var pos = oauth.title.search(/code=/)
-   if (pos > -1) {
-    oauth.visible = false
-    web.visible = true
-    pos += "code=".length
-    var code = oauth.title.substr(pos)
-    var req = new XMLHttpRequest();
-    req.onreadystatechange = function () {
-     if (req.readyState == XMLHttpRequest.DONE) {
-      if (req.status == 200) {
-       var a = JSON.parse(req.responseText);
-       bridge.token = a.refresh_token;
-       accessToken = a.access_token;
-       var d = new Date();
-       expiry = d.getTime() / 1000 + a.expires_in
-       console.log("Got refresh = " + bridge.token + ", access = " + accessToken + ", expiry = " + expiry)
-       oauthing = false
-      }
-     }
-    };
-    req.open("POST", "https://accounts.google.com/o/oauth2/token", true)
-    req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
-    req.send("code="+code+"&client_id="+Secrets.clientID+"&client_secret="+Secrets.clientSecret+"&redirect_uri="+Secrets.redirectURI+"&grant_type=authorization_code")
-   }
-  }
-  url: "https://accounts.google.com/o/oauth2/auth?response_type=code&client_id="+Secrets.clientID+"&redirect_uri="+Secrets.redirectURI+"&scope=https://www.googleapis.com/auth/latitude.current.best"
- }
+    property bool destinationSet: false
+    property Coordinate destination: null
+    property string destinationName: "destination"
 
     PositionSource {
         id: gpspos
@@ -81,14 +41,19 @@ Page {
 +"window.accuracy.setOptions({ strokeColor: \"#" + (acc > bridge.minAccuracy ? "FF0000" : "00FF00") + "\" });"
 )
             console.log("New GPS position")
-            if (oauthing) return;
+            if (!bridge.enabled) return;
             var d = new Date();
-            if (d.getTime() / 1000 < latituded) {
+            var m = lastLatitude == null ? 0 : lastLatitude.distanceTo(gpspos.position.coordinate);
+            status.text = 'Latitude updated ' + Math.round(d.getTime() / 1000 - latituded) + 's and ' + Math.round(m) +'m ago.'
+            if (destinationSet) {
+                destStatus.text = Math.round(gpspos.position.coordinate.distanceTo(destination)) + 'm from ' + destinationName + '.';
+	    }
+            if (oauthing) return;
+            if (d.getTime() / 1000 < latituded + bridge.minTime) {
                 console.log("Last latitude too recent");
                 return;
             }
-            var m;
-            if (lastLatitude != null && (m = lastLatitude.distanceTo(gpspos.position.coordinate)) < bridge.minDistance) {
+            if (lastLatitude != null && m < bridge.minDistance) {
                 console.log("Last latitude too close: "+m)
                 return;
             }
@@ -107,13 +72,14 @@ Page {
                             expiry = 0
                         }
                         oauthing = false
-                        latituded = d.getTime() / 1000 + bridge.minTime;
+                        latituded = d.getTime() / 1000;
                         //var oldLatitude = lastLatitude;
                         lastLatitude = Qt.createQmlObject('import QtMobility.location 1.2; Coordinate { latitude:'+ lat +'; longitude: '+ lng +'; }', gpspos);
                         //if (oldLatitude != null) oldLatitude.destroy();
                         web.evaluateJavaScript(
 "window.uploaded.setPosition(new google.maps.LatLng("+lat+", "+lng+"));"
 );
+			status.text = 'Latitude updated.'
                     }
                 };
                 oauthing = true
@@ -141,16 +107,43 @@ Page {
                  req.send("refresh_token="+bridge.token+"&client_id="+Secrets.clientID+"&client_secret="+Secrets.clientSecret+"&grant_type=refresh_token")
             } else {
                 oauthing = true
-                web.visible = false
                 oauth.visible = true
             }
         }
     }
 
+    QueryDialog {
+      id: netError
+      message: 'Could not connect to the Internet. Please check your connection and try again.'
+      titleText: 'Connection Error'
+      acceptButtonText: 'Close'
+    }
+
+    Text {
+      id: destStatus
+      text: 'Tap on map to set destination'
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      horizontalAlignment: Text.AlignHCenter
+    }
+
+    Text {
+      id: status
+      text: 'Latitude not connected'
+      anchors.top: destStatus.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      horizontalAlignment: Text.AlignHCenter
+    }
+
     WebView {
         //visible: false
         id: web
-        anchors.fill: parent
+        anchors.top: status.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
 
         pressGrabTime: 0
 
@@ -161,22 +154,27 @@ Page {
 )
         }
 
+        onLoadFailed: {
+	    netError.visualParent = web
+	    netError.open()
+        }
+
         javaScriptWindowObjects: QtObject {
 	    id: webHost
             WebView.windowObjectName: "host"
 
-	    property bool destinationSet: false
-            property Coordinate destination: null;
-
             function clicked(lat, lng) {
-	        if (!destinationSet)
+	        if (!destinationSet) {
+		    destStatus.text = 'Destination set.'
+	            destinationSet = true
+                    destination = Qt.createQmlObject('import QtMobility.location 1.2; Coordinate { latitude:'+ lat +'; longitude: '+ lng +'; }', webHost);
                     web.evaluateJavaScript(
 "var lat = " + lat + ";"
 +"var lng = " + lng + ";"
 +"window.destination.setPosition(new google.maps.LatLng(lat, lng));"
++"window.geocoder.geocode({ 'latLng': window.destination.getPosition() }, function (results, status) { if (status == google.maps.GeocoderStatus.OK) window.host.destinationNameChanged(results[0].formatted_address); });"
 )
-	        destinationSet = true
-                destination = Qt.createQmlObject('import QtMobility.location 1.2; Coordinate { latitude:'+ lat +'; longitude: '+ lng +'; }', webHost);
+                }
             }
 
 	    function destinationChanged(lat, lng) {
@@ -184,9 +182,24 @@ Page {
 "if (window.to.getPath().getLength() == 0)"
 +" window.to.getPath().push(window.destination.getPosition());"
 +"window.to.getPath().setAt(1, window.destination.getPosition());"
++"window.geocoder.geocode({ 'latLng': window.destination.getPosition() }, function (results, status) { if (status == google.maps.GeocoderStatus.OK) window.host.destinationNameChanged(results[0].formatted_address); });"
 )
-		destination.latitude = lat
-                destination.longitude = lng
+		destStatus.text = 'Destination changed.'
+	        destinationSet = true
+
+                if (destination == null) {
+                    destination = Qt.createQmlObject('import QtMobility.location 1.2; Coordinate { latitude:'+ lat +'; longitude: '+ lng +'; }', webHost);
+                } else {
+		    destination.latitude = lat
+                    destination.longitude = lng
+                }
+            }
+
+            function destinationNameChanged(name) {
+                console.log("name = " + name)
+                destinationName = name
+		if (destinationName != "")
+                    destStatus.text = "Destination is " + destinationName + ".";
             }
 
             function newBounds(lat, lng, zoom) {
@@ -217,6 +230,7 @@ Page {
         };
         window.map = new google.maps.Map(document.getElementById(\"map_canvas\"),
             myOptions);
+        window.geocoder = new google.maps.Geocoder();
         window.from = new google.maps.Polyline({ path: [], strokeColor: \"#00FF00\" });
 	window.to = new google.maps.Polyline({ path: [], strokeColor: \"#FF0000\" });
 	window.from.setMap(window.map)
@@ -250,12 +264,68 @@ Page {
 </html>"
     }
 
+ Item {
+  visible: false
+  id: oauth
+  anchors.fill: parent
+
+ WebView {
+  id: weboauth
+  anchors.fill: parent
+
+  javaScriptWindowObjects: QtObject {
+
+    WebView.windowObjectName: "host"
+
+  }
+
+  onLoadFinished: {
+   var pos = weboauth.title.search(/code=/)
+   if (pos > -1) {
+    oauth.visible = false
+    pos += "code=".length
+    var code = weboauth.title.substr(pos)
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function () {
+     if (req.readyState == XMLHttpRequest.DONE) {
+      if (req.status == 200) {
+       var a = JSON.parse(req.responseText);
+       bridge.token = a.refresh_token;
+       accessToken = a.access_token;
+       var d = new Date();
+       expiry = d.getTime() / 1000 + a.expires_in
+       console.log("Got refresh = " + bridge.token + ", access = " + accessToken + ", expiry = " + expiry)
+       oauthing = false
+      }
+     }
+    };
+    req.open("POST", "https://accounts.google.com/o/oauth2/token", true)
+    req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
+    req.send("code="+code+"&client_id="+Secrets.clientID+"&client_secret="+Secrets.clientSecret+"&redirect_uri="+Secrets.redirectURI+"&grant_type=authorization_code")
+   }
+  }
+  url: "https://accounts.google.com/o/oauth2/auth?response_type=code&client_id="+Secrets.clientID+"&redirect_uri="+Secrets.redirectURI+"&scope=https://www.googleapis.com/auth/latitude.current.best"
+ }
+
+ Button {
+   text: "Cancel"
+   anchors.top: parent.top
+   anchors.right: parent.right
+
+   onClicked: {
+    bridge.enabled = false
+    oauth.visible = false
+    oauthing = false
+   }
+ }
+ }
+
     ProgressBar {
 	id: progressBar
 	anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        value: web.progress
+        value: oauth.visible ? oath.progress : web.progress
 	visible: value < 1.0
     }
 }
