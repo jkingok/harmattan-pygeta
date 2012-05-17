@@ -31,7 +31,7 @@ Page {
             var alt = gpspos.position.coordinate.altitude;
             var acc = (gpspos.position.horizontalAccuracy + gpspos.position.verticalAccuracy) / 2;
             web.evaluateJavaScript(
-"window.map.panTo(new google.maps.LatLng("+lat+", "+lng+"));"
+(bridge.autoCentre ? "window.map.panTo(new google.maps.LatLng("+lat+", "+lng+"));" : "")
 +"window.position.setPosition(new google.maps.LatLng("+lat+", "+lng+"));"
 +"window.position.setMap(window.map);"
 +"window.from.getPath().push(new google.maps.LatLng("+lat+","+lng+"));"

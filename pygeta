@@ -27,6 +27,7 @@ class Bridge(QtCore.QObject):
 		self._minTime = 15
 		self._minAccuracy = 100
 		self._enabled = True
+		self._autoCentre = True
 		self.latChanged.connect(self.saveLat)
 		self.longChanged.connect(self.saveLong)
 		self.zoomChanged.connect(self.saveZoom)
@@ -35,6 +36,7 @@ class Bridge(QtCore.QObject):
 		self.minTimeChanged.connect(self.saveMinTime)
 		self.minAccuracyChanged.connect(self.saveMinAccuracy)
 		self.enabledChanged.connect(self.saveEnabled)
+		self.autoCentreChanged.connect(self.saveAutoCentre)
 
 	@QtCore.Slot()
 	def openSettings(self):
@@ -63,6 +65,10 @@ class Bridge(QtCore.QObject):
 		if (value is None):
 			value = True
 		self.enabled = value
+		value = gconf.client_get_default().get_bool(prefix+'View/AutoCentre')
+		if (value is None):
+			value = True
+		self.autoCentre = value
 
 	def _get_lat(self):
 		return self._lat
@@ -128,6 +134,14 @@ class Bridge(QtCore.QObject):
 			self._enabled = value
 			self.enabledChanged.emit()
 
+	def _get_autoCentre(self):
+		return self._autoCentre
+
+	def _set_autoCentre(self, value):
+		if (value != self._autoCentre):
+			self._autoCentre = value
+			self.autoCentreChanged.emit()
+
 	latChanged = QtCore.Signal()
 	longChanged = QtCore.Signal()
 	zoomChanged = QtCore.Signal()
@@ -136,6 +150,7 @@ class Bridge(QtCore.QObject):
 	minTimeChanged = QtCore.Signal()
 	minAccuracyChanged = QtCore.Signal()
 	enabledChanged = QtCore.Signal()
+	autoCentreChanged = QtCore.Signal()
 
 	@QtCore.Slot()
 	def saveLat(self):
@@ -169,6 +184,10 @@ class Bridge(QtCore.QObject):
 	def saveEnabled(self):
 		gconf.client_get_default().set_bool('/apps/ControlPanel/PyGETA/Latitude/Enabled', self._enabled)
 
+	@QtCore.Slot()
+	def saveAutoCentre(self):
+		gconf.client_get_default().set_bool('/apps/ControlPanel/PyGETA/View/AutoCentre', self._autoCentre)
+
 	lat = QtCore.Property(float, _get_lat, _set_lat, notify=latChanged)
 	long = QtCore.Property(float, _get_long, _set_long, notify=longChanged)
 	zoom = QtCore.Property(int, _get_zoom, _set_zoom, notify=zoomChanged)
@@ -177,6 +196,7 @@ class Bridge(QtCore.QObject):
 	minTime = QtCore.Property(int, _get_minTime, _set_minTime, notify=minTimeChanged)
 	minAccuracy = QtCore.Property(int, _get_minAccuracy, _set_minAccuracy, notify=minAccuracyChanged)
 	enabled = QtCore.Property(bool, _get_enabled, _set_enabled, notify=enabledChanged)
+	autoCentre = QtCore.Property(bool, _get_autoCentre, _set_autoCentre, notify=autoCentreChanged)
 
 def main():
 

@@ -1,5 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <settings>
+	<group title="View">
+		<boolean key="/apps/ControlPanel/PyGETA/View/AutoCentre" title="Auto-centre"></boolean>
+	</group>
 	<group title="Latitude">
 		<boolean key="/apps/ControlPanel/PyGETA/Latitude/Enabled" title="Enable updates"></boolean>
 		<integer key="/apps/ControlPanel/PyGETA/Latitude/MinTime"
