@@ -31,7 +31,7 @@ Page {
             var alt = gpspos.position.coordinate.altitude;
             var acc = (gpspos.position.horizontalAccuracy + gpspos.position.verticalAccuracy) / 2;
             web.evaluateJavaScript(
-(bridge.autoCentre ? "window.map.panTo(new google.maps.LatLng("+lat+", "+lng+"));" : "")
+(bridge.autoCentre ? ("window.map.panTo(new google.maps.LatLng("+lat+", "+lng+"));") : "")
 +"window.position.setPosition(new google.maps.LatLng("+lat+", "+lng+"));"
 +"window.position.setMap(window.map);"
 +"window.from.getPath().push(new google.maps.LatLng("+lat+","+lng+"));"
@@ -152,6 +152,14 @@ Page {
 "window.map.setZoom(" + bridge.zoom + ");"
 +"window.map.panTo(new google.maps.LatLng(" + bridge.lat + "," + bridge.long + "));"
 )
+            if (bridge.dest != "") {
+                var a = bridge.dest.split(",", 2);
+                //var b = bridge.dest.substr(bridge.dest.indexOf(',', bridge.dest.indexOf(',') + 1) + 1);
+
+                web.evaluateJavaScript(
+                    "window.destination.setPosition(new google.maps.LatLng(" + a[0] + ", " + a[1] + "));"
+                );
+            }
         }
 
         onLoadFailed: {
@@ -165,14 +173,14 @@ Page {
 
             function clicked(lat, lng) {
 	        if (!destinationSet) {
-		    destStatus.text = 'Destination set.'
-	            destinationSet = true
-                    destination = Qt.createQmlObject('import QtMobility.location 1.2; Coordinate { latitude:'+ lat +'; longitude: '+ lng +'; }', webHost);
+//		    destStatus.text = 'Destination set.'
+//	            destinationSet = true
+//                    destination = Qt.createQmlObject('import QtMobility.location 1.2; Coordinate { latitude:'+ lat +'; longitude: '+ lng +'; }', webHost);
                     web.evaluateJavaScript(
 "var lat = " + lat + ";"
 +"var lng = " + lng + ";"
 +"window.destination.setPosition(new google.maps.LatLng(lat, lng));"
-+"window.geocoder.geocode({ 'latLng': window.destination.getPosition() }, function (results, status) { if (status == google.maps.GeocoderStatus.OK) window.host.destinationNameChanged(results[0].formatted_address); });"
+//+"window.geocoder.geocode({ 'latLng': window.destination.getPosition() }, function (results, status) { if (status == google.maps.GeocoderStatus.OK) window.host.destinationNameChanged(results[0].formatted_address); });"
 )
                 }
             }
@@ -193,6 +201,7 @@ Page {
 		    destination.latitude = lat
                     destination.longitude = lng
                 }
+		bridge.dest = lat + "," + lng;
             }
 
             function destinationNameChanged(name) {

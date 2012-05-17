@@ -20,7 +20,8 @@ from subprocess import call
 class Bridge(QtCore.QObject):
 	def __init__(self):
 		QtCore.QObject.__init__(self)
-		self._lat = self._long = 0.0
+                self._settings = QtCore.QSettings()
+		self._lat = self._long = 0
 		self._zoom = 8
 		self._token = ''
 		self._minDistance = 100
@@ -28,6 +29,7 @@ class Bridge(QtCore.QObject):
 		self._minAccuracy = 100
 		self._enabled = True
 		self._autoCentre = True
+		self._dest = ''
 		self.latChanged.connect(self.saveLat)
 		self.longChanged.connect(self.saveLong)
 		self.zoomChanged.connect(self.saveZoom)
@@ -142,6 +144,14 @@ class Bridge(QtCore.QObject):
 			self._autoCentre = value
 			self.autoCentreChanged.emit()
 
+     	def _get_dest(self):
+		return str(self._settings.value("Destination"))
+
+ 	def _set_dest(self, value):
+		if (value != self.dest):
+			self._settings.setValue("Destination", value)
+			self.destChanged.emit()
+
 	latChanged = QtCore.Signal()
 	longChanged = QtCore.Signal()
 	zoomChanged = QtCore.Signal()
@@ -151,6 +161,7 @@ class Bridge(QtCore.QObject):
 	minAccuracyChanged = QtCore.Signal()
 	enabledChanged = QtCore.Signal()
 	autoCentreChanged = QtCore.Signal()
+        destChanged = QtCore.Signal()
 
 	@QtCore.Slot()
 	def saveLat(self):
@@ -197,6 +208,7 @@ class Bridge(QtCore.QObject):
 	minAccuracy = QtCore.Property(int, _get_minAccuracy, _set_minAccuracy, notify=minAccuracyChanged)
 	enabled = QtCore.Property(bool, _get_enabled, _set_enabled, notify=enabledChanged)
 	autoCentre = QtCore.Property(bool, _get_autoCentre, _set_autoCentre, notify=autoCentreChanged)
+        dest = QtCore.Property(str, _get_dest, _set_dest, notify=destChanged)
 
 def main():
 
@@ -204,6 +216,9 @@ def main():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
     app = QtGui.QApplication(sys.argv)
+    QtCore.QCoreApplication.setOrganizationName("Techtransit")
+    QtCore.QCoreApplication.setOrganizationDomain("techtransit.blogspot.com")
+    QtCore.QCoreApplication.setApplicationName("GETA")
     view = QtDeclarative.QDeclarativeView()
 
     # Comment the two lines below if you don't want to use OpenGL for QML rendering or if it is not supported
