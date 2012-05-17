@@ -15,6 +15,8 @@ Page {
     property string accessToken: ""
     property int expiry: 0
     property bool oauthing: false
+    property bool warned: false
+    property bool granted: false
     property int latituded: 0
     property bool destinationSet: false
     property Coordinate destination: null
@@ -41,7 +43,12 @@ Page {
 +"window.accuracy.setOptions({ strokeColor: \"#" + (acc > bridge.minAccuracy ? "FF0000" : "00FF00") + "\" });"
 )
             console.log("New GPS position")
-            if (!bridge.enabled) return;
+            if (!bridge.enabled || (warned && !granted)) return;
+            if (latituded == 0 && !warned) {
+                warned = true;
+                warning.open();
+                return;
+            }
             var d = new Date();
             var m = lastLatitude == null ? 0 : lastLatitude.distanceTo(gpspos.position.coordinate);
             status.text = (latituded > 0) ? 'Latitude updated ' + Math.round(d.getTime() / 1000 - latituded) + 's and ' + Math.round(m) +'m ago.' : 'Latitude not yet updated.'
@@ -110,6 +117,16 @@ Page {
                 oauth.visible = true
             }
         }
+    }
+
+    QueryDialog {
+      id: warning
+      message: 'GAuth will send your current location to the Google Latitude service on the Internet and frequently update it, which may be publicly accessible. Your choice will be remembered until the application exits. Continue?'
+      titleText: 'Location Warning'
+      acceptButtonText: 'Yes'
+      rejectButtonText: 'No'
+      visualParent: web
+      onAccepted: { warning.close(); granted = true; }
     }
 
     QueryDialog {
