@@ -29,6 +29,7 @@ class Bridge(QtCore.QObject):
 		self._minAccuracy = 100
 		self._enabled = True
 		self._autoCentre = True
+		self._autoZoom = True
 		self._dest = ''
 		self.latChanged.connect(self.saveLat)
 		self.longChanged.connect(self.saveLong)
@@ -39,6 +40,7 @@ class Bridge(QtCore.QObject):
 		self.minAccuracyChanged.connect(self.saveMinAccuracy)
 		self.enabledChanged.connect(self.saveEnabled)
 		self.autoCentreChanged.connect(self.saveAutoCentre)
+		self.autoZoomChanged.connect(self.saveAutoZoom)
 
 	@QtCore.Slot()
 	def openSettings(self):
@@ -70,7 +72,12 @@ class Bridge(QtCore.QObject):
 		value = gconf.client_get_default().get_bool(prefix+'View/AutoCentre')
 		if (value is None):
 			value = True
-		self.autoCentre = value
+		self.autoZoom = value
+		value = gconf.client_get_default().get_bool(prefix+'View/AutoZoom')
+		if (value is None):
+			value = True
+		self.autoZoom = value
+
 
 	def _get_lat(self):
 		return self._lat
@@ -144,6 +151,14 @@ class Bridge(QtCore.QObject):
 			self._autoCentre = value
 			self.autoCentreChanged.emit()
 
+	def _get_autoZoom(self):
+		return self._autoZoom
+
+	def _set_autoZoom(self, value):
+		if (value != self._autoZoom):
+			self._autoZoom = value
+			self.autoZoomChanged.emit()
+
      	def _get_dest(self):
 		return str(self._settings.value("Destination"))
 
@@ -161,6 +176,7 @@ class Bridge(QtCore.QObject):
 	minAccuracyChanged = QtCore.Signal()
 	enabledChanged = QtCore.Signal()
 	autoCentreChanged = QtCore.Signal()
+	autoZoomChanged = QtCore.Signal()
         destChanged = QtCore.Signal()
 
 	@QtCore.Slot()
@@ -199,6 +215,10 @@ class Bridge(QtCore.QObject):
 	def saveAutoCentre(self):
 		gconf.client_get_default().set_bool('/apps/ControlPanel/PyGETA/View/AutoCentre', self._autoCentre)
 
+	@QtCore.Slot()
+	def saveAutoZoom(self):
+		gconf.client_get_default().set_bool('/apps/ControlPanel/PyGETA/View/AutoZoom', self._autoZoom)
+
 	lat = QtCore.Property(float, _get_lat, _set_lat, notify=latChanged)
 	long = QtCore.Property(float, _get_long, _set_long, notify=longChanged)
 	zoom = QtCore.Property(int, _get_zoom, _set_zoom, notify=zoomChanged)
@@ -208,6 +228,7 @@ class Bridge(QtCore.QObject):
 	minAccuracy = QtCore.Property(int, _get_minAccuracy, _set_minAccuracy, notify=minAccuracyChanged)
 	enabled = QtCore.Property(bool, _get_enabled, _set_enabled, notify=enabledChanged)
 	autoCentre = QtCore.Property(bool, _get_autoCentre, _set_autoCentre, notify=autoCentreChanged)
+	autoZoom = QtCore.Property(bool, _get_autoZoom, _set_autoZoom, notify=autoZoomChanged)
         dest = QtCore.Property(str, _get_dest, _set_dest, notify=destChanged)
 
 def main():

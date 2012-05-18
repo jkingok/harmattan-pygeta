@@ -2,6 +2,7 @@
 <settings>
 	<group title="View">
 		<boolean key="/apps/ControlPanel/PyGETA/View/AutoCentre" title="Auto-centre"></boolean>
+		<boolean key="/apps/ControlPanel/PyGETA/View/AutoZoom" title="Auto-zoom"></boolean>
 	</group>
 	<group title="Latitude">
 		<boolean key="/apps/ControlPanel/PyGETA/Latitude/Enabled" title="Enable updates"></boolean>

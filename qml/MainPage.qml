@@ -32,8 +32,26 @@ Page {
             var lng = gpspos.position.coordinate.longitude
             var alt = gpspos.position.coordinate.altitude;
             var acc = (gpspos.position.horizontalAccuracy + gpspos.position.verticalAccuracy) / 2;
+            var n = gpspos.position.coordinate.latitude;
+            var s = gpspos.position.coordinate.latitude;
+            var w = gpspos.position.coordinate.longitude;
+            var e = gpspos.position.coordinate.longitude;
+            if (bridge.autoZoom && destinationSet) {
+                if (n < destination.latitude) { n = destination.latitude; }
+                if (s > destination.latitude) { s = destination.latitude; }
+                if (e < destination.longitude) { e = destination.longitude; }
+                if (w > destination.longitude) { w = destination.longitude; }
+                if (bridge.autoCentre) {
+                    if (lat == n) n -= Math.abs(s - n);
+                    else s += Math.abs(n - s);
+                    if (lng == e) e += Math.abs(w - e);
+                    else w -= Math.abs(e - w);
+                }
+            } 
+            console.log("n="+n+", e="+e+", s="+s+", w="+w);
             web.evaluateJavaScript(
-(bridge.autoCentre ? ("window.map.panTo(new google.maps.LatLng("+lat+", "+lng+"));") : "")
+((bridge.autoZoom && destinationSet) ? "window.map.fitBounds(new google.maps.LatLngBounds(new google.maps.LatLng("+s+", "+w+"), new google.maps.LatLng("+n+", "+e+")));" : "")
++(bridge.autoCentre ? ("window.map.panTo(new google.maps.LatLng("+lat+", "+lng+"));") : "")
 +"window.position.setPosition(new google.maps.LatLng("+lat+", "+lng+"));"
 +"window.position.setMap(window.map);"
 +"window.from.getPath().push(new google.maps.LatLng("+lat+","+lng+"));"
