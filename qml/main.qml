@@ -60,10 +60,14 @@ PageStackWindow {
         id: myMenu
         visualParent: pageStack
         MenuLayout {
-			MenuItem {
-				text: qsTr("About")
-				onClicked: aboutDialog.open()
-			}
+            MenuItem {
+                text: qsTr("Clear destination")
+                onClicked: bridge.dest = ""
+            }
+            MenuItem {
+		text: qsTr("About")
+		onClicked: aboutDialog.open()
+	    }
         }
     }
 }

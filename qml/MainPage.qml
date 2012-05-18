@@ -22,6 +22,26 @@ Page {
     property Coordinate destination: null
     property string destinationName: "destination"
 
+    Connections {
+        target: bridge
+        onDestChanged: {
+            if (bridge.dest == "") {
+                destinationSet = false;
+                destStatus.text = 'Tap on map to set destination.'
+                web.evaluateJavaScript(
+"window.destination.setMap(null);"
++"window.to.setPath({});");
+            } else {
+                var a = bridge.dest.split(",", 2);
+                //var b = bridge.dest.substr(bridge.dest.indexOf(',', bridge.dest.indexOf(',') + 1) + 1);
+
+                web.evaluateJavaScript(
+                    "window.destination.setPosition(new google.maps.LatLng(" + a[0] + ", " + a[1] + "));"
+                );
+            }  
+        }
+    }
+
     PositionSource {
         id: gpspos
 
