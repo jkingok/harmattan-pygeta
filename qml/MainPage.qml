@@ -18,6 +18,7 @@ Page {
     property bool warned: false
     property bool granted: false
     property int latituded: 0
+    property int routed: 0
     property bool destinationSet: false
     property Coordinate destination: null
     property string destinationName: "destination"
@@ -68,7 +69,6 @@ Page {
                     else w -= Math.abs(e - w);
                 }
             } 
-            console.log("n="+n+", e="+e+", s="+s+", w="+w);
             web.evaluateJavaScript(
 ((bridge.autoZoom && destinationSet) ? "window.map.fitBounds(new google.maps.LatLngBounds(new google.maps.LatLng("+s+", "+w+"), new google.maps.LatLng("+n+", "+e+")));" : "")
 +(bridge.autoCentre ? ("window.map.panTo(new google.maps.LatLng("+lat+", "+lng+"));") : "")
@@ -81,8 +81,13 @@ Page {
 +"window.accuracy.setOptions({ strokeColor: \"#" + (acc > bridge.minAccuracy ? "FF0000" : "00FF00") + "\" });"
 )
             console.log("New GPS position")
+            var d = new Date();
             if (destinationSet) {
-                destStatus.text = Math.round(gpspos.position.coordinate.distanceTo(destination)) + 'm from ' + destinationName + '.';
+                //destStatus.text = Math.round(gpspos.position.coordinate.distanceTo(destination)) + 'm from ' + destinationName + '.';
+                if (d.getTime() / 60000 > routed + 1) {
+                    routed = d.getTime() / 60000;
+                    web.evaluateJavaScript("window.directions.route({ origin: window.position.getPosition(), destination: window.destination.getPosition(), travelMode: google.maps.TravelMode.DRIVING }, function (result, status) { if (status == google.maps.DirectionsStatus.OK) { window.director.setDirections(result); window.host.eta(result.routes[0].legs[0].distance.text, result.routes[0].legs[0].duration.text, result.routes[0].legs[0].duration.value); window.host.notices(result.routes[0].copyrights, result.routes[0].warnings.join('\\n')); } });");
+                }
 	    }
             if (!bridge.enabled || (warned && !granted)) return;
             if (latituded == 0 && !warned) {
@@ -90,7 +95,6 @@ Page {
                 warning.open();
                 return;
             }
-            var d = new Date();
             var m = lastLatitude == null ? 0 : lastLatitude.distanceTo(gpspos.position.coordinate);
             status.text = (latituded > 0) ? 'Latitude updated ' + Math.round(d.getTime() / 1000 - latituded) + 's and ' + Math.round(m) +'m ago.' : 'Latitude not yet updated.'
             if (oauthing) return;
@@ -178,18 +182,48 @@ Page {
       id: destStatus
       text: 'Tap on map to set destination'
       anchors.top: parent.top
-      anchors.left: parent.left
-      anchors.right: parent.right
+      anchors.left: time.visible ? time.right : parent.left
+      anchors.right: speed.visible ? speed.left : parent.right
       horizontalAlignment: Text.AlignHCenter
+      clip: true
     }
 
     Text {
       id: status
       text: 'Latitude not connected'
       anchors.top: destStatus.bottom
+      anchors.left: time.visible ? time.right : parent.left
+      anchors.right: speed.visible ? speed.left : parent.right
+      horizontalAlignment: Text.AlignHCenter
+      clip: true
+    }
+
+    Text {
+      id: speed
+      visible: gpspos.position.speedValid
+      text: Math.round(gpspos.position.speed / 1000 * 60 * 60) + "km/h"
+      anchors.top: parent.top
+      anchors.bottom: status.bottom
+      anchors.right: parent.right
+      verticalAlignment: Text.AlignVCenter
+    }
+
+    Text {
+      id: time
+      //visible: destinationSet && (routed > 0)
+      //text: (new Date()).toLocaleTimeString()
+      anchors.top: parent.top
+      anchors.bottom: status.bottom
+      anchors.left: parent.left
+      verticalAlignment: Text.AlignVCenter
+    }
+
+    Text {
+      id: copyright
+      visible: text != ""
+      anchors.bottom: parent.bottom
       anchors.left: parent.left
       anchors.right: parent.right
-      horizontalAlignment: Text.AlignHCenter
     }
 
     WebView {
@@ -198,7 +232,7 @@ Page {
         anchors.top: status.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.bottom: copyright.visible ? copyright.top : parent.bottom
 
         pressGrabTime: 0
 
@@ -271,6 +305,28 @@ Page {
                 bridge.long = lng
                 bridge.zoom = zoom
             }
+
+            function eta(dist, dur, secs) {
+                destStatus.text = dist + " and " + dur + " from " + destinationName;
+                var d = new Date();
+                var e = new Date(d.getTime() + secs * 1000);
+                time.text = d.toLocaleTimeString() + "\n" + e.toLocaleTimeString();
+            }
+
+            function log(s) {
+                console.log(s);
+            }
+
+            function notices(copyrights, warnings) {
+                var s = copyrights;
+                if (warnings != "") {
+                    if (s != "") {
+                        s += "\n";
+                    }
+                    s += warnings;
+                }
+                copyright.text = s;
+            }
         }
 
         html: "<!DOCTYPE html>
@@ -306,6 +362,9 @@ Page {
 	window.destination.setMap(window.map);
         window.uploaded = new google.maps.Marker({ icon: \"http://www.google.com/latitude/apps/static/favicon.ico\" })
 	window.uploaded.setMap(window.map);
+ 	window.directions = new google.maps.DirectionsService();
+        window.director = new google.maps.DirectionsRenderer();
+        window.director.setMap(window.map);
         google.maps.event.addListener(window.map, \"click\", function (event) {
           window.host.clicked(event.latLng.lat(), event.latLng.lng());
         });
