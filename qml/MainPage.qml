@@ -9,6 +9,8 @@ Page {
     id: mainPage
     tools: commonTools
 
+    orientationLock: PageOrientation.LockLandscape
+
     property alias gpspos: gpspos
     property alias web: web
 
@@ -63,8 +65,8 @@ Page {
                 if (e < destination.longitude) { e = destination.longitude; }
                 if (w > destination.longitude) { w = destination.longitude; }
                 if (bridge.autoCentre) {
-                    if (lat == n) n -= Math.abs(s - n);
-                    else s += Math.abs(n - s);
+                    if (lat == n) n += Math.abs(s - n);
+                    else s -= Math.abs(n - s);
                     if (lng == e) e += Math.abs(w - e);
                     else w -= Math.abs(e - w);
                 }
@@ -178,7 +180,7 @@ Page {
       acceptButtonText: 'Close'
     }
 
-    Text {
+    Label {
       id: destStatus
       text: 'Tap on map to set destination'
       anchors.top: parent.top
@@ -186,9 +188,13 @@ Page {
       anchors.right: speed.visible ? speed.left : parent.right
       horizontalAlignment: Text.AlignHCenter
       clip: true
+
+      platformStyle: LabelStyle {
+        fontPixelSize: 20
+      }
     }
 
-    Text {
+    Label {
       id: status
       text: 'Latitude not connected'
       anchors.top: destStatus.bottom
@@ -196,9 +202,13 @@ Page {
       anchors.right: speed.visible ? speed.left : parent.right
       horizontalAlignment: Text.AlignHCenter
       clip: true
+
+      platformStyle: LabelStyle {
+        fontPixelSize: 20
+      }
     }
 
-    Text {
+    Label {
       id: speed
       visible: gpspos.position.speedValid
       text: Math.round(gpspos.position.speed / 1000 * 60 * 60) + "km/h"
@@ -206,9 +216,13 @@ Page {
       anchors.bottom: status.bottom
       anchors.right: parent.right
       verticalAlignment: Text.AlignVCenter
+
+      platformStyle: LabelStyle {
+        fontPixelSize: 20
+      }
     }
 
-    Text {
+    Label {
       id: time
       //visible: destinationSet && (routed > 0)
       //text: (new Date()).toLocaleTimeString()
@@ -216,6 +230,10 @@ Page {
       anchors.bottom: status.bottom
       anchors.left: parent.left
       verticalAlignment: Text.AlignVCenter
+
+      platformStyle: LabelStyle {
+        fontPixelSize: 20
+      }
     }
 
     Text {
