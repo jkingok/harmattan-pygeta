@@ -9,8 +9,6 @@ Page {
     id: mainPage
     tools: commonTools
 
-    orientationLock: PageOrientation.LockLandscape
-
     property alias gpspos: gpspos
     property alias web: web
 
