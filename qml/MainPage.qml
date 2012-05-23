@@ -464,7 +464,7 @@ Page {
 	anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        value: oauth.visible ? oath.progress : web.progress
+        value: oauth.visible ? oauth.progress : web.progress
 	visible: value < 1.0
     }
 }
