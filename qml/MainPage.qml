@@ -75,6 +75,8 @@ Page {
 +"window.position.setPosition(new google.maps.LatLng("+lat+", "+lng+"));"
 +"window.position.setMap(window.map);"
 +"window.from.getPath().push(new google.maps.LatLng("+lat+","+lng+"));"
++"if (window.from.getPath().getLength() > 1) window.gaps.push(1);"
++"while (window.from.getPath().getLength() > 300) { if (window.gaps[window.cull] < window.interval) { window.from.getPath().removeAt(window.cull + 1); var old = window.gaps.splice(cull + 1, 1); window.gaps[cull] += old[0]; } else { window.cull++; if (window.cull >= 180) { window.interval *= 2; window.cull = 0; } } }"
 +"window.to.getPath().setAt(0, new google.maps.LatLng("+lat+", "+lng+"));"
 +"window.accuracy.setCenter(new google.maps.LatLng("+lat+", "+lng+"));"
 +"window.accuracy.setRadius("+acc+");"
@@ -167,7 +169,7 @@ Page {
       titleText: 'Location Warning'
       acceptButtonText: 'Yes'
       rejectButtonText: 'No'
-      visualParent: web
+      visualParent: parent
       onAccepted: { warning.close(); granted = true; }
     }
 
@@ -359,6 +361,9 @@ Page {
     </script>
     <script type=\"text/javascript\">
       function initialize() {
+	window.cull = 0;
+        window.interval = 2;
+        window.gaps = [];
         var myOptions = {
           center: new google.maps.LatLng(-34.397, 150.644),
           zoom: 8,
