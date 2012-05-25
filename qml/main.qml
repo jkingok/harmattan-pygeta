@@ -6,6 +6,8 @@ PageStackWindow {
 
     property string version: "1.0"
 
+    property QtObject ss: null;
+
     initialPage: mainPage
 
     MainPage {
@@ -14,7 +16,17 @@ PageStackWindow {
 
     Connections {
         target: platformWindow
-	onActiveChanged: if (platformWindow.active) bridge.readConfig()
+	onActiveChanged: {
+		if (platformWindow.active) {
+			bridge.readConfig();
+			if (followButton.checked) {
+				ss = Qt.createQmlObject('import QtMobility.systeminfo 1.1; ScreenSaver { screenSaverInhibited: true }', followButton);
+			}
+		} else if (ss !== null) {
+			ss.destroy();
+			ss = null;
+		}
+	}
     }
 
     ToolBarLayout {
@@ -27,8 +39,11 @@ PageStackWindow {
             text: "Follow"
             onClicked: {
                 if (followButton.checked) {
+		    ss = Qt.createQmlObject('import QtMobility.systeminfo 1.1; ScreenSaver { screenSaverInhibited: true }', followButton);
                     mainPage.gpspos.start();
                 } else {
+		    ss.destroy();
+		    ss = null;
                     mainPage.gpspos.stop();
                     mainPage.web.evaluateJavaScript("window.position.setMap(null)")
                 }
