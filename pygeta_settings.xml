@@ -3,6 +3,7 @@
 	<group title="View">
 		<boolean key="/apps/ControlPanel/PyGETA/View/AutoCentre" title="Auto-centre"></boolean>
 		<boolean key="/apps/ControlPanel/PyGETA/View/AutoZoom" title="Auto-zoom"></boolean>
+		<boolean key="/apps/ContolPanel/PyGETA/View/ScreenOn" title="Screen on with GPS" />
 	</group>
 	<group title="Latitude">
 		<boolean key="/apps/ControlPanel/PyGETA/Latitude/Enabled" title="Enable updates"></boolean>

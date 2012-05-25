@@ -19,7 +19,7 @@ PageStackWindow {
 	onActiveChanged: {
 		if (platformWindow.active) {
 			bridge.readConfig();
-			if (followButton.checked) {
+			if (followButton.checked && bridge.screenOn) {
 				ss = Qt.createQmlObject('import QtMobility.systeminfo 1.1; ScreenSaver { screenSaverInhibited: true }', followButton);
 			}
 		} else if (ss !== null) {
@@ -38,12 +38,14 @@ PageStackWindow {
             checkable: true
             text: "Follow"
             onClicked: {
-                if (followButton.checked) {
+                if (followButton.checked && bridge.screenOn) {
 		    ss = Qt.createQmlObject('import QtMobility.systeminfo 1.1; ScreenSaver { screenSaverInhibited: true }', followButton);
                     mainPage.gpspos.start();
                 } else {
-		    ss.destroy();
-		    ss = null;
+		    if (ss !== null) {
+		        ss.destroy();
+		        ss = null;
+                    }
                     mainPage.gpspos.stop();
                     mainPage.web.evaluateJavaScript("window.position.setMap(null)")
                 }
