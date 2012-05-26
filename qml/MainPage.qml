@@ -244,13 +244,24 @@ Page {
       anchors.right: parent.right
     }
 
-    WebView {
-        //visible: false
-        id: web
-        anchors.top: status.bottom
+    Item {
+	id: webHolder
+	anchors.top: status.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: copyright.visible ? copyright.top : parent.bottom
+
+    WebView {
+        //visible: false
+        id: web
+        //anchors.top: status.bottom
+        //anchors.left: parent.left
+        //anchors.right: parent.right
+        //anchors.bottom: copyright.visible ? copyright.top : parent.bottom
+        anchors.centerIn: webHolder
+
+        width: parent.width / scale
+        height: parent.height / scale
 
         pressGrabTime: 0
 
@@ -347,6 +358,8 @@ Page {
             }
         }
 
+	scale: bridge.easyRead ? 2.0 : 1.0
+
         html: "<!DOCTYPE html>
 <html>
   <head>
@@ -406,6 +419,7 @@ Page {
     <div id=\"map_canvas\" style=\"width:100%; height:100%\"></div>
   </body>
 </html>"
+    }
     }
 
  Item {
