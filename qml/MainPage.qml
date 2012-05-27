@@ -141,7 +141,7 @@ Page {
                         web.evaluateJavaScript(
 "window.uploaded.setPosition(new google.maps.LatLng("+lat+", "+lng+"));"
 );
-			status.text = 'Latitude updated.'
+			//status.text = 'Latitude updated.'
                     }
                 };
                 oauthing = true
@@ -222,10 +222,11 @@ Page {
     Label {
       id: speed
       visible: gpspos.position.speedValid
-      text: Math.round(gpspos.position.speed / 1000 * 60 * 60) + "km/h"
+      text: Math.round(gpspos.position.speed / 1000 * 60 * 60) + "\nkm/h"
       anchors.top: parent.top
       anchors.bottom: status.bottom
       anchors.right: parent.right
+      horizontalAlignment: Text.AlignHCenter
       verticalAlignment: Text.AlignVCenter
 
       platformStyle: LabelStyle {
@@ -240,6 +241,7 @@ Page {
       anchors.top: parent.top
       anchors.bottom: status.bottom
       anchors.left: parent.left
+      horizontalAlignment: Text.AlignHCenter
       verticalAlignment: Text.AlignVCenter
 
       platformStyle: LabelStyle {
@@ -368,8 +370,9 @@ Page {
             function eta(dist, dur, secs) {
                 destStatus.text = dist + " and " + dur + " from " + destinationName;
                 var d = new Date();
-                var e = new Date(d.getTime() + secs * 1000);
-                time.text = d.toLocaleTimeString() + "\n" + e.toLocaleTimeString();
+                var e = new Date(d.getTime() + (secs + 59) * 1000);
+                //time.text = d.toLocaleTimeString() + "\n" + e.toLocaleTimeString();
+                time.text = d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes() + "\n" + e.getHours() + ":" + (e.getMinutes() < 10 ? "0" : "") + e.getMinutes();
             }
 
             function log(s) {
