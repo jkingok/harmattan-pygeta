@@ -99,7 +99,7 @@ Page {
                 //destStatus.text = Math.round(gpspos.position.coordinate.distanceTo(destination)) + 'm from ' + destinationName + '.';
                 if (d.getTime() / 60000 > routed + 1) {
                     routed = d.getTime() / 60000;
-                    web.evaluateJavaScript("window.directions.route({ origin: window.position.getPosition(), destination: window.destination.getPosition(), travelMode: google.maps.TravelMode.DRIVING }, function (result, status) { if (status == google.maps.DirectionsStatus.OK) { window.director.setDirections(result); window.host.eta(result.routes[0].legs[0].distance.text, result.routes[0].legs[0].duration.text, result.routes[0].legs[0].duration.value); window.host.notices(result.routes[0].copyrights, result.routes[0].warnings.join('\\n')); } });");
+                    web.evaluateJavaScript("window.directions.route({ origin: window.position.getPosition(), destination: window.destination.getPosition(), travelMode: google.maps.TravelMode.DRIVING }, function (result, status) { if (status == google.maps.DirectionsStatus.OK) { window.to.setPath(result.routes[0].overview_path); window.to.getPath().insertAt(0, window.position.getPosition()); window.to.getPath().push(window.destination.getPosition()); window.host.eta(result.routes[0].legs[0].distance.text, result.routes[0].legs[0].duration.text, result.routes[0].legs[0].duration.value); window.host.notices(result.routes[0].copyrights, result.routes[0].warnings.join('\\n')); } });");
                 }
 	    }
             if (!bridge.enabled || (warned && !granted)) return;
@@ -435,8 +435,8 @@ Page {
         window.uploaded = new google.maps.Marker({ icon: \"http://www.google.com/latitude/apps/static/favicon.ico\" })
 	window.uploaded.setMap(window.map);
  	window.directions = new google.maps.DirectionsService();
-        window.director = new google.maps.DirectionsRenderer();
-        window.director.setMap(window.map);
+        //window.director = new google.maps.DirectionsRenderer();
+        //window.director.setMap(window.map);
         google.maps.event.addListener(window.map, \"click\", function (event) {
           window.host.clicked(event.latLng.lat(), event.latLng.lng());
         });
