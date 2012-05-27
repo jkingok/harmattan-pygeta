@@ -62,7 +62,7 @@ PageStackWindow {
 	}
         ToolIcon { platformIconId: "toolbar-view-menu";
              anchors.right: parent===undefined ? undefined : parent.right
-             onClicked: (myMenu.status == DialogStatus.Closed) ? myMenu.open() : myMenu.close()
+              onClicked: (myMenu.status == DialogStatus.Closed) ? myMenu.open() : myMenu.close()
         }
     }
 
@@ -77,6 +77,10 @@ PageStackWindow {
         id: myMenu
         visualParent: pageStack
         MenuLayout {
+            MenuItem {
+                text: qsTr("Recent destinations");
+                onClicked: mainPage.dests.visible = !mainPage.dests.visible;
+            }
             MenuItem {
                 text: qsTr("Clear destination")
                 onClicked: bridge.dest = ""

@@ -11,6 +11,7 @@ Page {
 
     property alias gpspos: gpspos
     property alias web: web
+    property alias dests: dests
 
     property string accessToken: ""
     property int expiry: 0
@@ -319,14 +320,24 @@ Page {
 		    destination.latitude = lat
                     destination.longitude = lng
                 }
-		bridge.dest = lat + "," + lng;
+                var d = lat + "," + lng;
+                dests.model.insert(0, { "name": "", "dest": d });
+                for (var i = 1; i < dests.model.count; i++) {
+                    if (dests.model.get(i).dest == d) {
+                        dests.model.remove(i);
+                        break;
+                    }
+                }
+		bridge.dest = d;
             }
 
             function destinationNameChanged(name) {
                 console.log("name = " + name)
                 destinationName = name
-		if (destinationName != "")
+		if (destinationName != "") {
                     destStatus.text = "Destination is " + destinationName + ".";
+                    dests.model.get(0).name = name;
+                }
             }
 
             function newBounds(lat, lng, zoom) {
@@ -378,8 +389,13 @@ Page {
         window.interval = 2;
         window.gaps = [];
         var myOptions = {
-          center: new google.maps.LatLng(-34.397, 150.644),
-          zoom: 8,
+          center: new google.maps.LatLng(0, 0),
+          zoom: 0,
+          scaleControl: true,
+          scaleControlOptions: {
+            position: google.maps.ControlPosition.TOP_LEFT
+          },
+          streetViewControl: false,
           mapTypeId: google.maps.MapTypeId.ROADMAP
         };
         window.map = new google.maps.Map(document.getElementById(\"map_canvas\"),
@@ -402,8 +418,16 @@ Page {
         google.maps.event.addListener(window.map, \"click\", function (event) {
           window.host.clicked(event.latLng.lat(), event.latLng.lng());
         });
+        window.destTimerOn = false;
 	google.maps.event.addListener(window.destination, \"position_changed\", function () {
-	  window.host.destinationChanged(window.destination.getPosition().lat(), window.destination.getPosition().lng());
+          if (window.destTimerOn) {
+            window.clearTimeout(window.destTimer);
+          }
+          window.destTimerOn = true;
+          window.destTimer = window.setTimeout(function () {
+	    window.host.destinationChanged(window.destination.getPosition().lat(), window.destination.getPosition().lng());
+            window.destTimerOn = false;
+          }, 2000);
 	});
         google.maps.event.addListener(window.map, \"bounds_changed\", function () {
           window.host.newBounds(
@@ -431,11 +455,9 @@ Page {
   id: weboauth
   anchors.fill: parent
 
-  javaScriptWindowObjects: QtObject {
-
-    WebView.windowObjectName: "host"
-
-  }
+//  javaScriptWindowObjects: QtObject {
+//    WebView.windowObjectName: "host"
+//  }
 
   onLoadFinished: {
    var pos = weboauth.title.search(/code=/)
@@ -485,5 +507,47 @@ Page {
         anchors.bottom: parent.bottom
         value: oauth.visible ? oauth.progress : web.progress
 	visible: value < 1.0
+    }
+
+    ListView {
+        id: dests
+        visible: false
+
+        anchors.fill: parent
+
+        model: ListModel {
+
+        }
+
+        delegate: Component {
+            Rectangle {
+            color: "lightgray"
+            width: childrenRect.width
+            height: childrenRect.height
+            MouseArea {
+            	anchors.fill: parent
+                onClicked: {
+                    bridge.dest = dest
+                    dests.visible = false
+                }
+            }
+            Column {
+            width: dests.width
+            Label {
+                text: (name == "") ? "Unknown" : name
+                clip: true
+                width: parent.width
+            }
+            Label {
+                text: dest
+                platformStyle: LabelStyle {
+                    fontPixelSize: 18
+                }
+                clip: true
+                width: parent.width
+            }
+            }
+            }
+        }
     }
 }
