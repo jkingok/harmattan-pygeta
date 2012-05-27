@@ -32,6 +32,7 @@ class Bridge(QtCore.QObject):
 		self._autoZoom = True
 		self._screenOn = True
 		self._dest = ''
+                self._dests = ''
 		self._easyRead = False
 		self.latChanged.connect(self.saveLat)
 		self.longChanged.connect(self.saveLong)
@@ -45,6 +46,7 @@ class Bridge(QtCore.QObject):
 		self.autoZoomChanged.connect(self.saveAutoZoom)
 		self.screenOnChanged.connect(self.saveScreenOn)
 		self.easyReadChanged.connect(self.saveEasyRead)
+                self.destsChanged.connect(self.saveDests)
 
 	@QtCore.Slot()
 	def openSettings(self):
@@ -89,6 +91,15 @@ class Bridge(QtCore.QObject):
 		if (value is None):
 			value = False
 		self.easyRead = value
+                self.dests = gconf.client_get_default().get_string(prefix+'View/Recents') or str()
+
+	def _get_dests(self):
+		return self._dests
+
+	def _set_dests(self, dests):
+		if (dests != self._dests):
+			self._dests = dests
+			self.destsChanged.emit()
 
 	def _get_lat(self):
 		return self._lat
@@ -194,6 +205,7 @@ class Bridge(QtCore.QObject):
 			self._settings.setValue("Destination", value)
 			self.destChanged.emit()
 
+	destsChanged = QtCore.Signal()
 	latChanged = QtCore.Signal()
 	longChanged = QtCore.Signal()
 	zoomChanged = QtCore.Signal()
@@ -207,6 +219,10 @@ class Bridge(QtCore.QObject):
 	easyReadChanged = QtCore.Signal()
 	screenOnChanged = QtCore.Signal()
         destChanged = QtCore.Signal()
+
+	@QtCore.Slot()
+	def saveDests(self):
+		gconf.client_get_default().set_string('/apps/ControlPanel/PyGETA/View/Recents', self._dests)
 
 	@QtCore.Slot()
 	def saveLat(self):
@@ -256,6 +272,7 @@ class Bridge(QtCore.QObject):
 	def saveEasyRead(self):
 		gconf.client_get_default().set_bool('/apps/ControlPanel/PyGETA/View/EasyRead', self._easyRead)
 
+	dests = QtCore.Property(str, _get_dests, _set_dests, notify=destsChanged)
 	lat = QtCore.Property(float, _get_lat, _set_lat, notify=latChanged)
 	long = QtCore.Property(float, _get_long, _set_long, notify=longChanged)
 	zoom = QtCore.Property(int, _get_zoom, _set_zoom, notify=zoomChanged)

@@ -42,6 +42,16 @@ Page {
                 );
             }  
         }
+        onDestsChanged: {
+            console.log(bridge.dests);
+            dests.model.clear();
+            var ds = bridge.dests.split("\n");
+            for (var i = 0; i < ds.length; i++) {
+                var fs = ds[i].split("|", 2);
+                if (fs.length == 2)
+                    dests.model.append({ "name": fs[1], "dest": fs[0] });
+            }
+        }
     }
 
     PositionSource {
@@ -321,14 +331,18 @@ Page {
                     destination.longitude = lng
                 }
                 var d = lat + "," + lng;
-                dests.model.insert(0, { "name": "", "dest": d });
-                for (var i = 1; i < dests.model.count; i++) {
+                var ds = bridge.dests.split("\n");
+                //dests.model.insert(0, { "name": "", "dest": d });
+                for (var i = 0; i < dests.model.count; i++) {
                     if (dests.model.get(i).dest == d) {
-                        dests.model.remove(i);
+                        //dests.model.remove(i);
+                        ds.splice(i, 1);
                         break;
                     }
                 }
+                ds.splice(0, 0, d + "|");
 		bridge.dest = d;
+                bridge.dests = ds.join("\n");
             }
 
             function destinationNameChanged(name) {
@@ -336,7 +350,12 @@ Page {
                 destinationName = name
 		if (destinationName != "") {
                     destStatus.text = "Destination is " + destinationName + ".";
-                    dests.model.get(0).name = name;
+                    //dests.model.setProperty(0, "name", name);
+                    var ds = bridge.dests.split("\n");
+                    var fs = ds[0].split("|", 2);
+                    fs[1] = destinationName;
+                    ds[0] = fs.join("|");
+                    bridge.dests = ds.join("\n");
                 }
             }
 
