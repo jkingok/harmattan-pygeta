@@ -423,8 +423,8 @@ Page {
         window.map = new google.maps.Map(document.getElementById(\"map_canvas\"),
             myOptions);
         window.geocoder = new google.maps.Geocoder();
-        window.from = new google.maps.Polyline({ path: [], strokeColor: \"#00FF00\" });
-	window.to = new google.maps.Polyline({ path: [], strokeColor: \"#FF0000\" });
+        window.from = new google.maps.Polyline({ path: [], strokeColor: \"#00FF00\", strokeOpacity: 0.5 });
+	window.to = new google.maps.Polyline({ path: [], strokeColor: \"#0000FF\", strokeOpacity: 0.5 });
 	window.from.setMap(window.map)
         window.to.setMap(window.map)
         window.traffic = new google.maps.TrafficLayer();
