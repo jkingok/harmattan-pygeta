@@ -5,6 +5,7 @@ PageStackWindow {
     id: appWindow
 
     property string version: "1.0"
+    property bool warned: false
 
     property QtObject ss: null;
 
@@ -18,14 +19,22 @@ PageStackWindow {
         target: platformWindow
 	onActiveChanged: {
 		if (platformWindow.active) {
+                    mainPage.gpspos.updateInterval = 1000
 			bridge.readConfig();
-			if (followButton.checked && bridge.screenOn) {
-				ss = Qt.createQmlObject('import QtMobility.systeminfo 1.1; ScreenSaver { screenSaverInhibited: true }', followButton);
+			if (followButton.checked) {
+                            if (bridge.screenOn) {
+				ss = Qt.createQmlObject('import QtMobility.systeminfo 1.1; ScreenSaver { screenSaverInhibited: true }', followButton)
+                            }
 			}
-		} else if (ss !== null) {
+		} else {
+                    if (ss !== null) {
 			ss.destroy();
 			ss = null;
-		}
+		    }
+                    mainPage.gpspos.stop() 
+                    mainPage.gpspos.updateInterval = bridge.minTime * 1000;
+                    mainPage.gpspos.start()
+                }
 	}
     }
 
@@ -40,7 +49,10 @@ PageStackWindow {
             onClicked: {
                 if (followButton.checked && bridge.screenOn) {
 		    ss = Qt.createQmlObject('import QtMobility.systeminfo 1.1; ScreenSaver { screenSaverInhibited: true }', followButton);
-                    mainPage.gpspos.start();
+                    if (!warned) {
+                        warned = true;
+                        warning.open()
+                    }
                 } else {
 		    if (ss !== null) {
 		        ss.destroy();
@@ -64,6 +76,17 @@ PageStackWindow {
              anchors.right: parent===undefined ? undefined : parent.right
               onClicked: (myMenu.status == DialogStatus.Closed) ? myMenu.open() : myMenu.close()
         }
+    }
+
+    QueryDialog {
+      id: warning
+      message: 'GAuth will send your current location to the Google Latitude service on the Internet and frequently update it, which may be publicly accessible. Your choice will be remembered until the application exits. Continue?'
+      titleText: 'Location Warning'
+      acceptButtonText: 'Yes'
+      rejectButtonText: 'No'
+      visualParent: mainPage
+      onAccepted: { warning.close(); mainPage.gpspos.start(); }
+      onRejected: { warning.close(); followButton.checked = false; }
     }
 
     QueryDialog {

@@ -2,6 +2,7 @@ import QtQuick 1.1
 import QtWebKit 1.0
 import QtMobility.location 1.2
 import com.nokia.meego 1.1
+import com.nokia.extras 1.0
 
 import "secrets.js" as Secrets
 
@@ -16,8 +17,6 @@ Page {
     property string accessToken: ""
     property int expiry: 0
     property bool oauthing: false
-    property bool warned: false
-    property bool granted: false
     property int latituded: 0
     property int routed: 0
     property bool destinationSet: false
@@ -102,12 +101,7 @@ Page {
                     web.evaluateJavaScript("window.directions.route({ origin: window.position.getPosition(), destination: window.destination.getPosition(), travelMode: google.maps.TravelMode.DRIVING }, function (result, status) { if (status == google.maps.DirectionsStatus.OK) { window.to.setPath(result.routes[0].overview_path); window.to.getPath().insertAt(0, window.position.getPosition()); window.to.getPath().push(window.destination.getPosition()); window.host.eta(result.routes[0].legs[0].distance.text, result.routes[0].legs[0].duration.text, result.routes[0].legs[0].duration.value); window.host.notices(result.routes[0].copyrights, result.routes[0].warnings.join('\\n')); } });");
                 }
 	    }
-            if (!bridge.enabled || (warned && !granted)) return;
-            if (latituded == 0 && !warned) {
-                warned = true;
-                warning.open();
-                return;
-            }
+            if (!bridge.enabled) return;
             var m = lastLatitude == null ? 0 : lastLatitude.distanceTo(gpspos.position.coordinate);
             status.text = (latituded > 0) ? 'Latitude updated ' + Math.round(d.getTime() / 1000 - latituded) + 's and ' + Math.round(m) +'m ago.' : 'Latitude not yet updated.'
             if (oauthing) return;
@@ -130,6 +124,7 @@ Page {
                         if (req.status == 200) {
                             var a = JSON.parse(req.responseText);
 			    console.log("Latitude updated")
+                            updateBanner.show()
                         } else {
                             expiry = 0
                         }
@@ -172,16 +167,6 @@ Page {
                 oauth.visible = true
             }
         }
-    }
-
-    QueryDialog {
-      id: warning
-      message: 'GAuth will send your current location to the Google Latitude service on the Internet and frequently update it, which may be publicly accessible. Your choice will be remembered until the application exits. Continue?'
-      titleText: 'Location Warning'
-      acceptButtonText: 'Yes'
-      rejectButtonText: 'No'
-      visualParent: parent
-      onAccepted: { warning.close(); granted = true; }
     }
 
     QueryDialog {
@@ -571,5 +556,10 @@ Page {
             }
             }
         }
+    }
+
+    InfoBanner {
+        id: updateBanner
+        text: "Latitude updated"
     }
 }
