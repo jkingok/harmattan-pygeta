@@ -9,7 +9,7 @@
 	<group title="Latitude">
 		<boolean key="/apps/ControlPanel/PyGETA/Latitude/Enabled" title="Enable updates"></boolean>
 		<integer key="/apps/ControlPanel/PyGETA/Latitude/MinTime"
-			title="Min time (seconds)" min="0" max="3600"></integer>
+			title="Min time (minutes)" min="1" max="90"></integer>
 		<integer key="/apps/ControlPanel/PyGETA/Latitude/MinDistance"
 			title="Min distance (metres)" min="0" max="10000"></integer>
 		<integer key="/apps/ControlPanel/PyGETA/Latitude/MinDistance"

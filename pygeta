@@ -25,7 +25,7 @@ class Bridge(QtCore.QObject):
 		self._zoom = 8
 		self._token = ''
 		self._minDistance = 100
-		self._minTime = 15
+		self._minTime = 1
 		self._minAccuracy = 100
 		self._enabled = True
 		self._autoCentre = True
@@ -142,7 +142,7 @@ class Bridge(QtCore.QObject):
 			self.minDistanceChanged.emit()
 
 	def _get_minTime(self):
-		return self._minTime
+		return self._minTime * 60
 
 	def _set_minTime(self, value):
 		if (value != self._minTime):
