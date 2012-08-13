@@ -19,9 +19,9 @@ PageStackWindow {
         target: platformWindow
 	onActiveChanged: {
 		if (platformWindow.active) {
-                    mainPage.gpspos.updateInterval = 1000
 			bridge.readConfig();
 			if (followButton.checked) {
+	                    mainPage.gpspos.updateInterval = 1000
                             if (bridge.screenOn) {
 				ss = Qt.createQmlObject('import QtMobility.systeminfo 1.1; ScreenSaver { screenSaverInhibited: true }', followButton)
                             }
@@ -32,8 +32,10 @@ PageStackWindow {
 			ss = null;
 		    }
                     mainPage.gpspos.stop() 
-                    mainPage.gpspos.updateInterval = bridge.minTime * 1000;
-                    mainPage.gpspos.start()
+		    if (followButton.checked) {
+                    	mainPage.gpspos.updateInterval = bridge.minTime * 1000;
+                    	mainPage.gpspos.start()
+		    }
                 }
 	}
     }
@@ -47,12 +49,17 @@ PageStackWindow {
             checkable: true
             text: "Follow"
             onClicked: {
-                if (followButton.checked && bridge.screenOn) {
-		    ss = Qt.createQmlObject('import QtMobility.systeminfo 1.1; ScreenSaver { screenSaverInhibited: true }', followButton);
-                    if (!warned) {
+                if (followButton.checked) {
+		    if (bridge.screenOn) {
+		        ss = Qt.createQmlObject('import QtMobility.systeminfo 1.1; ScreenSaver { screenSaverInhibited: true }', followButton);
+                    }
+		    if (!warned) {
                         warned = true;
                         warning.open()
-                    }
+                    } else {
+                        mainPage.gpspos.updateInterval = 1000
+			mainPage.gpspos.start()
+		    }
                 } else {
 		    if (ss !== null) {
 		        ss.destroy();
@@ -85,7 +92,7 @@ PageStackWindow {
       acceptButtonText: 'Yes'
       rejectButtonText: 'No'
       visualParent: mainPage
-      onAccepted: { warning.close(); mainPage.gpspos.start(); }
+      onAccepted: { warning.close(); mainPage.gpspos.updateInterval = 1000; mainPage.gpspos.start(); }
       onRejected: { warning.close(); followButton.checked = false; }
     }
 
