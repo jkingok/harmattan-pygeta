@@ -125,7 +125,7 @@ Page {
                             var a = JSON.parse(req.responseText);
 			    console.log("Latitude updated")
                             updateBanner.show()
-                            bridge.postToFeed("Latitude updated", "Next in "+(bridge.minTime/60)+"min and "+bridge.minDistance+"m")
+                            bridge.postToFeed("Latitude updated", "Accurate to "+Math.ceil(acc)+"m, next in "+(bridge.minTime/60)+"min and "+bridge.minDistance+"m")
                         } else {
                             expiry = 0
                         }
@@ -136,6 +136,7 @@ Page {
                         //if (oldLatitude != null) oldLatitude.destroy();
                         web.evaluateJavaScript(
 "window.uploaded.setPosition(new google.maps.LatLng("+lat+", "+lng+"));"
++"window.geocoder.geocode({ 'latLng': window.uploaded.getPosition() }, function (results, status) { if (status == google.maps.GeocoderStatus.OK) window.host.uploadedNameChanged(results[0].formatted_address); });"
 );
 			//status.text = 'Latitude updated.'
                     }
@@ -345,6 +346,11 @@ Page {
                     ds[0] = fs.join("|");
                     bridge.dests = ds.join("\n");
                 }
+            }
+
+            function uploadedNameChanged(name) {
+                console.log("name = " + name)
+                bridge.updateFeed(name)
             }
 
             function newBounds(lat, lng, zoom) {

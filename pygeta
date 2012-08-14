@@ -51,6 +51,7 @@ class Bridge(QtCore.QObject):
 		self.screenOnChanged.connect(self.saveScreenOn)
 		self.easyReadChanged.connect(self.saveEasyRead)
                 self.destsChanged.connect(self.saveDests)
+		self.item = None
 
 	@QtCore.Slot()
 	def openSettings(self):
@@ -294,9 +295,16 @@ class Bridge(QtCore.QObject):
 	@QtCore.Slot(str, str)
 	def postToFeed(self, text, foot=''):
 		feeder.remove_items()
-		item = EventFeedItem('/usr/share/icons/hicolor/64x64/apps/pygeta.png', text)
-		item.set_footer(foot)
-		feeder.add_item(item)
+		self.item = EventFeedItem('/usr/share/icons/hicolor/64x64/apps/pygeta.png', text)
+		self.item.set_body(foot)
+		self.item.set_footer('Geocoding...')
+		feeder.add_item(self.item)
+
+	@QtCore.Slot(str)
+	def updateFeed(self, text):
+		print text
+		self.item.set_footer(text)
+		feeder.update_item(self.item)
 
 def main():
 
