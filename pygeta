@@ -17,6 +17,10 @@ import dbus.mainloop.glib
 
 from subprocess import call
 
+from eventfeed import EventFeedService, EventFeedItem
+
+feeder = EventFeedService('pygeta', 'GETA')
+
 class Bridge(QtCore.QObject):
 	def __init__(self):
 		QtCore.QObject.__init__(self)
@@ -69,7 +73,7 @@ class Bridge(QtCore.QObject):
 		self.zoom = gconf.client_get_default().get_int(prefix+'View/Zoom') or 8
 		self.token = gconf.client_get_default().get_string(prefix+'Latitude/Token') or str()
 		self.minDistance = gconf.client_get_default().get_int(prefix+'Latitude/MinDistance') or 100
-		self.minTime = gconf.client_get_default().get_int(prefix+'Latitude/MinTime') or 15
+		#self.minTime = gconf.client_get_default().get_int(prefix+'Latitude/MinTime') or 15
 		self.minAccuracy = gconf.client_get_default().get_int(prefix+'Latitude/MinAccuracy') or 100
 		value = gconf.client_get_default().get_bool(prefix+'Latitude/Enabled')
 		if (value is None):
@@ -287,6 +291,13 @@ class Bridge(QtCore.QObject):
 	easyRead = QtCore.Property(bool, _get_easyRead, _set_easyRead, notify=easyReadChanged)
         dest = QtCore.Property(str, _get_dest, _set_dest, notify=destChanged)
 
+	@QtCore.Slot(str, str)
+	def postToFeed(self, text, foot=''):
+		feeder.remove_items()
+		item = EventFeedItem('/usr/share/icons/hicolor/64x64/apps/pygeta.png', text)
+		item.set_footer(foot)
+		feeder.add_item(item)
+
 def main():
 
     # Enable glib main loop support
@@ -312,7 +323,9 @@ def main():
         view.setSource('/opt/pygeta/qml/main.qml')
 
     view.showFullScreen()
-    sys.exit(app.exec_())
+    exitCode = app.exec_()
+    feeder.remove_items()
+    sys.exit(exitCode)
 
 if __name__ == "__main__":
     main()

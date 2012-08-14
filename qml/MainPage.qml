@@ -125,6 +125,7 @@ Page {
                             var a = JSON.parse(req.responseText);
 			    console.log("Latitude updated")
                             updateBanner.show()
+                            bridge.postToFeed("Latitude updated", "Next in "+(bridge.minTime/60)+"min and "+bridge.minDistance+"m")
                         } else {
                             expiry = 0
                         }
